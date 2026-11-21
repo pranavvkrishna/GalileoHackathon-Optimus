@@ -1,0 +1,27 @@
+# Health: is the prediction usable at all, separately from how well it scores.
+
+facts:
+  encoding_family: continuous_float
+
+plugins:
+  - kind: file
+    ref: ../plugins/_wake_health.py
+
+providers:
+  - provider_id: pitching_wake.prediction_views
+
+roster:
+  - gate_id: forecast_not_frozen_in_time
+    check: sample_dispersion_floor
+    disposition: blocking
+    parameters:
+      min_dispersion: 0.05
+    reason: >-
+      The wake is unsteady in every simulated case: the temporal RMS
+      fluctuation of the 20 true frames of a window (omega c/U) is 0.8 to 5.5
+      in the hidden in-range tier and 4.0 to 5.4 across the validation windows
+      (spread 0.48), and it varies with the kinematics. The view is computed
+      from the predicted frames alone. A forecast frozen in time (persistence,
+      a steady or blurred static field) gives 0 in every window; a spread below
+      0.05 across windows means the forecast's unsteadiness has collapsed or no
+      longer depends on the kinematics.

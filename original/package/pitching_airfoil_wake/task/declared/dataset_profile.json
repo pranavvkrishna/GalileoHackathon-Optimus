@@ -1,0 +1,13 @@
+{
+  "partition_count": 2,
+  "anchor_selection_files": [0],
+  "health_peek_files": [1],
+  "topology": {
+    "modality": "spatiotemporal_2d_field",
+    "partition_unit": "npz_split_file",
+    "sample_unit": "one forecast window (10 history frames, 20 future frames) of one simulated pitching case",
+    "independent_unit": "simulated case (one pitching kinematics); all windows of a case stay in one split",
+    "partitions": {"0": "train.npz: cases over the (k, theta0) design region minus a held-out block", "1": "validation.npz: cases inside the held-out block k in [5.5, 6.5], theta0 in [24, 32] deg, which straddles the periodic to aperiodic transition"},
+    "source": "Organizer-generated 2D incompressible simulations of a pitching NACA0012 at Re 500 with WaterLily.jl (MIT); private hidden test cases kept by the organizers."
+  }
+}

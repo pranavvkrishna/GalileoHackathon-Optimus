@@ -1,0 +1,9 @@
+{
+  "id": "forecast_nmse_final",
+  "direction": "lower",
+  "aggregation": "mean_over_windows_of_vorticity_nmse_at_lead_20_clipped_at_4",
+  "scoreability": {"contract_id": "deliverable_presence"},
+  "references": [],
+  "transform": null,
+  "transform_params": {}
+}

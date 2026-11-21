@@ -1,0 +1,8 @@
+data/
+original/*.zip
+runs/**/*.pt
+*.npz
+*.zip
+__pycache__/
+original/**/*.pt
+variants/**/*.pt

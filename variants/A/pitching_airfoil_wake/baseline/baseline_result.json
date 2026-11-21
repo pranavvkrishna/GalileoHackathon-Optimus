@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "framework": "pytorch",
+  "model_format": "pt",
+  "hyperparameters": {
+    "model": "conv encoder-decoder (3 levels, width 64, GELU) residual on last frame + inverse-distance 3-NN statistics over training cases",
+    "epochs": 40,
+    "batch_size": 32,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "schedule": "one-cycle, pct_start 0.1",
+    "loss": "MSE on vorticity / 4",
+    "train_window_stride_frames": 15,
+    "train_window_note": "every 3rd window of the data path stride 5 (all training cases)",
+    "knn_mean_field": "32-mode PCA of training mean fields",
+    "history_frames": 10,
+    "forecast_frames": 20,
+    "knn_neighbours": 3,
+    "weights_stored_as": "float16",
+    "deterministic": "torch.use_deterministic_algorithms(warn_only=True), TF32 off"
+  },
+  "seed": 0,
+  "evaluation_split": "validation",
+  "metrics": {
+    "forecast_nmse": 0.257133,
+    "forecast_nmse_final": 0.410477,
+    "mean_field_rel_l2": 0.79406,
+    "psd_log_rmse": 0.973436,
+    "regime_balanced_accuracy": 0.611111,
+    "st_abs_error": 0.070108
+  },
+  "tolerance": {
+    "forecast_nmse": 0.05,
+    "forecast_nmse_final": 0.08,
+    "mean_field_rel_l2": 0.001,
+    "psd_log_rmse": 0.001,
+    "st_abs_error": 0.001,
+    "regime_balanced_accuracy": 0.001
+  },
+  "hardware": {
+    "device": "cuda",
+    "description": "1x NVIDIA GeForce RTX 5080 (reported run); also timed on 1x RTX 5090 and 1x RTX 5080"
+  },
+  "wall_time": {
+    "train_seconds": 1283.3,
+    "evaluate_seconds": 3.9
+  },
+  "framework_versions": {
+    "python": "3.12.13",
+    "torch": "2.10.0+cu128",
+    "numpy": "2.4.3",
+    "siderius": "v1.1.0 (5ccb436f8)"
+  }
+}

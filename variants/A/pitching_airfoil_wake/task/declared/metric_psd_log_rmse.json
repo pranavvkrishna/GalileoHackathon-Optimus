@@ -1,0 +1,9 @@
+{
+  "id": "psd_log_rmse",
+  "direction": "lower",
+  "aggregation": "mean_over_cases_of_rms_error_of_log10_normalised_wake_spectrum_over_50_bins",
+  "scoreability": {"contract_id": "deliverable_presence"},
+  "references": [],
+  "transform": null,
+  "transform_params": {}
+}

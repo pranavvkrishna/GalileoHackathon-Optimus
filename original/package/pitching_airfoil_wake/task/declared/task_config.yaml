@@ -1,0 +1,102 @@
+# What the agents are told about the task, and the model's input and output.
+
+task_description: |
+  A NACA0012 airfoil pitches sinusoidally about its quarter chord,
+  theta(t) = theta0 sin(k t), in a uniform stream at chord Reynolds number 500
+  (2D incompressible Navier-Stokes). Depending on the reduced frequency
+  k = omega c / U and the amplitude theta0, the wake is periodic (locked to the
+  forcing, possibly at a subharmonic), weakly modulated (quasi-periodic), or
+  strongly aperiodic (Zaman et al. 2012; Majumdar, Bose and Sarkar, JFM 2022). For pitching kinematics not seen
+  in training, predict from the kinematics and a short history of the
+  vorticity field:
+    (a) the next 20 vorticity frames (2 convective times c/U ahead),
+    (b) the long-time wake statistics: time-mean vorticity field, normalised
+        wake spectrum of the cross-stream velocity at five wake probes, and the
+        dominant wake frequency f c / U,
+    (c) the wake regime: periodic, quasi-periodic or aperiodic, defined from
+        the five probe records by the periodicity defect
+        D(m) = rms(v(t + m T) - v(t)) / (sqrt(2) std v), T = 2 pi / k,
+        m = 1..4, over t in [15, 60]: periodic if min D < 0.10, aperiodic if
+        min D >= 0.30, quasi-periodic otherwise.
+  Data are organizer-generated simulations with WaterLily.jl (immersed
+  boundary, 64 cells per chord, stored at 16 cells per chord); the target is
+  this solver's physics at this resolution. Flow fields only: no forces are given or scored.
+  Rule: the model must be a learned surrogate. Running a flow solver
+  (WaterLily.jl or any CFD code) at inference is not allowed; a constraint
+  requires a median forward latency of at most 100 ms per window.
+  Training-data rule (binding): train only on the released files (train.npz and
+  validation.npz). Augmenting the released data is allowed (the up-down mirror
+  symmetry, extra windows or strides cut from released sequences, cropping,
+  noise, re-sampling or mixing of released samples). No additional data of any
+  kind: no new simulations with WaterLily.jl or any other solver, no downloaded
+  flow data, no labels from external models or codes. Hidden-test scores count
+  only for code the organizers can retrain on the released files.
+
+  Training: train.npz, cases spread over k in [2, 7] and theta0 in [5, 35] deg
+  except a held-out block. Scoring: validation.npz, cases inside the block
+  k in [5.5, 6.5], theta0 in [24, 32] deg, which straddles the transition
+  from periodic to aperiodic wakes (k theta0 about 2.3 to 3.6 rad). Each validation case is scored at its
+  declared windows (win_case, win_start). The organizers also score a private
+  hidden test with tiers reported separately: in-range kinematics, kinematics
+  dense near the regime boundaries, and amplitude / frequency extrapolation.
+
+  Selection: forecast NMSE (weight 2) and dominant-frequency error (0.5).
+  The mean-field and spectrum errors and the regime balanced accuracy are
+  reported but not used for selection: their labels change between 32 and
+  64 cells per chord (resolution check on all 185 cases; the regime agrees in
+  only 9 of 12 validation cases), and a two-threshold rule on k theta0
+  already reaches the baseline's regime score.
+  Main score: forecast NMSE (mean over windows and the 20 leads of the squared
+  vorticity error divided by the variance of the true frames about the case's
+  long-time mean; 1 = predicting the mean wake; per-window values clipped at
+  4). Also used in the selection formula: absolute error of the dominant
+  frequency. Reported only: NMSE at the last lead, relative L2 error of the
+  mean field, RMS error of the log10 spectrum and balanced accuracy of the
+  regime label.
+
+forward_contract:
+  segmentation_applicability: not_applicable
+  model_io:
+    input:
+      axes:
+        - {role: batch, dimension: {symbolic: "B"}}
+        - {dimension: {fixed: 14}}
+        - {dimension: {fixed: 48}}
+        - {dimension: {fixed: 96}}
+      dtype: {admissible: ["float32"]}
+    output:
+      axes:
+        - {role: batch, dimension: {symbolic: "B"}}
+        - {dimension: {fixed: 96822}}
+      dtype: {admissible: ["float32"]}
+  input_description: >-
+    One forecast window per batch item, on a 48 x 96 grid (rows y from -1.5c
+    to +1.5c, columns x from -0.5c to 5.5c measured from the leading edge at
+    zero pitch, 16 cells per chord). Channels 0-9: spanwise vorticity
+    omega_z c / U of the ten frames before the forecast start, oldest first,
+    0.1 c/U apart (the body interior carries the rigid-rotation vorticity).
+    Channel 10: forcing frequency k / (2 pi) (constant map). Channel 11:
+    theta0 in radians (constant). Channels 12 and 13: sin(k t_s) and
+    cos(k t_s), t_s the time of the first forecast frame (forcing phase).
+  output_description: >-
+    Flat vector of 96822 float32 values: [0, 92160) the next 20 vorticity
+    frames, each 48 x 96 row-major, lead 1 first; [92160, 96768) the long-time
+    mean vorticity field 48 x 96; [96768, 96818) log10 of the normalised wake
+    spectrum in 50 bins of f c/U over [0, 2.5] (each bin's power fraction plus
+    1e-5); 96818 the dominant wake frequency f c/U; [96819, 96822) regime
+    logits (periodic, quasi-periodic, aperiodic).
+  task_type: "regression"
+  output_head_note: >-
+    Output exactly [B, 96822] in physical units (no bounding activation on the
+    field part). Training targets carry the regime as a one-hot vector in the
+    last three entries; the metric applies softmax to the predicted entries.
+  task_note: >-
+    The training file holds the full frame sequence (t = 15.1 to 60 c/U) and
+    wake-probe records (t = 0 to 60) of every training case, so models may cut
+    their own windows; the default training dataset cuts every fifth start.
+    A case, not a window, is the independent unit: 810 training cases.
+    Long-time statistics and the regime are per case: the metric pools the
+    window predictions of each case (mean field and spectrum averaged, St
+    median, softmax probabilities averaged). In locked wakes the dominant
+    frequency is the forcing frequency k / (2 pi) or a harmonic; the score
+    rewards getting the aperiodic cases right.

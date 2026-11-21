@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "zenodo_record_id": "24386760",
+  "doi": "10.5281/zenodo.24386760",
+  "access": "public",
+  "license": "cc-by-4.0",
+  "files": [
+    {
+      "name": "train.npz",
+      "size": 3386399684,
+      "md5": "f20bb213fffef67bbc92b9a3da9f5efe"
+    },
+    {
+      "name": "validation.npz",
+      "size": 50178500,
+      "md5": "4b6a6c121bce2fd7bdf4f2a1134f6c9d"
+    }
+  ]
+}

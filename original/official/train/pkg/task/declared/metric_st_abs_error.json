@@ -1,0 +1,9 @@
+{
+  "id": "st_abs_error",
+  "direction": "lower",
+  "aggregation": "mean_over_cases_of_absolute_error_of_dominant_wake_frequency_fc_over_U",
+  "scoreability": {"contract_id": "deliverable_presence"},
+  "references": [],
+  "transform": null,
+  "transform_params": {}
+}

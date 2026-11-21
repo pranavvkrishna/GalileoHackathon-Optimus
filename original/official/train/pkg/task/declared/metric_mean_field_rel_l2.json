@@ -1,0 +1,9 @@
+{
+  "id": "mean_field_rel_l2",
+  "direction": "lower",
+  "aggregation": "mean_over_cases_of_relative_l2_error_of_long_time_mean_vorticity",
+  "scoreability": {"contract_id": "deliverable_presence"},
+  "references": [],
+  "transform": null,
+  "transform_params": {}
+}

@@ -1,0 +1,9 @@
+{
+  "id": "regime_balanced_accuracy",
+  "direction": "higher",
+  "aggregation": "balanced_accuracy_over_cases_of_regime_label_periodic_quasi_periodic_aperiodic",
+  "scoreability": {"contract_id": "deliverable_presence"},
+  "references": [],
+  "transform": null,
+  "transform_params": {}
+}

@@ -1,0 +1,130 @@
+# Task package manifest: forecasting a pitching-airfoil wake under unseen
+# kinematics (flow fields only). Every path is relative to this folder (task/).
+
+task_data_path:
+  file: plugins/_wake_task.py
+  symbol: WakeTaskDataPath
+  config:
+    train_file: train.npz
+    validation_file: validation.npz
+
+dataset_profile:
+  config: declared/dataset_profile.json
+
+metric:
+  declaration: declared/metric_forecast_nmse.json
+  implementation:
+    file: plugins/_wake_metrics.py
+    symbol: ForecastNmse
+
+secondary_metrics:
+  - declaration: declared/metric_forecast_nmse_final.json
+    implementation: {file: plugins/_wake_metrics.py, symbol: ForecastNmseFinal}
+  - declaration: declared/metric_mean_field_rel_l2.json
+    implementation: {file: plugins/_wake_metrics.py, symbol: MeanFieldRelL2}
+  - declaration: declared/metric_psd_log_rmse.json
+    implementation: {file: plugins/_wake_metrics.py, symbol: PsdLogRmse}
+  - declaration: declared/metric_st_abs_error.json
+    implementation: {file: plugins/_wake_metrics.py, symbol: StAbsError}
+  - declaration: declared/metric_regime_balanced_accuracy.json
+    implementation: {file: plugins/_wake_metrics.py, symbol: RegimeBalancedAccuracy}
+
+task_health:
+  config: declared/task_health.yaml
+
+interpretation_blocks:
+  none: true
+
+deliverable:
+  prefix: pitching_wake_predictions
+  extension: .npz
+  index_width: 4
+
+task_config:
+  config: declared/task_config.yaml
+
+evaluation:
+  components:
+    - kind: metric
+      id: forecast
+      metric: forecast_nmse
+      meaning: >-
+        Short-term forecast. Squared vorticity error of the next 20 frames
+        (2 c/U) divided by the variance of the true frames about the case's
+        long-time mean field, mean over leads and windows; per-window values
+        clipped at 4. 1.0 equals predicting the mean wake.
+      units: normalised MSE (0 = exact)
+      range: {lower: 0.0, upper: 4.0}
+    - kind: metric
+      id: forecast_final
+      metric: forecast_nmse_final
+      meaning: Same as forecast at the last lead only (2 c/U ahead), where error growth is largest.
+      units: normalised MSE
+      range: {lower: 0.0, upper: 4.0}
+    - kind: metric
+      id: mean_field
+      metric: mean_field_rel_l2
+      meaning: >-
+        Report only (not in the selection formula). Relative L2 error of the
+        predicted time-mean vorticity field (wake deflection and width), per
+        case. Its resolution floor is large: between 32 and 64 cells per chord
+        the label itself differs by a median of 0.32 over 185 cases (0.93 in
+        the validation block; see TASK_CARD).
+      units: fraction
+      range: {lower: 0.0, upper: 2.0}
+    - kind: metric
+      id: spectrum
+      metric: psd_log_rmse
+      meaning: >-
+        Report only (not in the selection formula; between 32 and 64 cells per
+        chord the label differs by a median of 0.28 decades over 185 cases,
+        0.57 in the validation block). RMS error over 50 frequency
+        bins (f c/U in [0, 2.5]) of the log10 normalised wake spectrum of the cross-stream
+        velocity at five wake probes, per case; separates line spectra
+        (periodic, quasi-periodic) from broadband (aperiodic) wakes.
+      units: decades (log10)
+      range: {lower: 0.0, upper: 5.0}
+    - kind: metric
+      id: strouhal
+      metric: st_abs_error
+      meaning: Absolute error of the dominant wake frequency f c/U per case.
+      units: f c / U
+      range: {lower: 0.0, upper: 2.5}
+    - kind: metric
+      id: regime
+      metric: regime_balanced_accuracy
+      meaning: >-
+        Report only (not in the selection formula). Regime label (periodic /
+        quasi-periodic / aperiodic, from the periodicity defect of the probe
+        records) per case, balanced accuracy over the classes present in the
+        evaluation split. Excluded from selection because labels near the
+        transition change between 32 and 64 cells per chord (9 of 12
+        validation cases agree) and a two-threshold rule on k theta0 already
+        scores 0.67 on validation (baseline 0.61).
+      units: fraction (1/3 = chance for three classes)
+      range: {lower: 0.0, upper: 1.0}
+    - kind: measurement
+      id: latency
+      measurement: inference_latency_ms
+      direction: lower
+      meaning: >-
+        Median forward latency for one forecast window on the training device.
+        The task asks for a learned surrogate: running a flow solver at
+        inference is not allowed. At the data's 64 cells per chord the solver
+        needs 130 to 730 time steps per c/U, each with a multigrid pressure
+        solve (measured 3.8 to 14 s per c/U on our shared GPUs and 1.5 s or
+        more per c/U on 2 CPU threads); spin-up from rest to the
+        window adds about 20 c/U, so the 100 ms bound also makes it
+        infeasible. The baseline needs a few milliseconds.
+      protocol: {input_shape: [1, 14, 48, 96], warmup: 5, repeats: 20}
+  selection:
+    kind: formula
+    formula:
+      family: weighted_sum
+      params:
+        terms:
+          - {component: forecast, weight: 2, lower: 0.0, upper: 1.0, out_of_range: clip}
+          - {component: strouhal, weight: 0.5, lower: 0.0, upper: 0.3, out_of_range: clip}
+  constraints:
+    - {component: forecast, op: '<=', threshold: 1.0}
+    - {component: latency, op: '<=', threshold: 100}
