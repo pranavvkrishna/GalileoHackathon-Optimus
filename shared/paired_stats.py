@@ -20,8 +20,13 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 CLIP = 4.0
 REGIMES = ("periodic", "quasi-periodic", "aperiodic")  # index order of regime_logits (_wake_task.unpack)
-COL = {"A_official": "#2a78d6", "C_on_A": "#eb6834"}   # categorical slots 1, 2
-LABEL = {"A_official": "A (official CNN)", "C_on_A": "C_on_A (mirror-averaged)"}
+CONFIGS = ("A_official", "C_on_A", "B_s0", "C_from_B_s0")
+COL = {"A_official": "#2a78d6", "C_on_A": "#eb6834", "B_s0": "#1baf7a", "C_from_B_s0": "#e87ba4"}  # slots 1,2,3,5
+LABEL = {"A_official": "A (official CNN)", "C_on_A": "C_on_A (mirror-averaged)",
+         "B_s0": "B (mirror-augmented training)", "C_from_B_s0": "C_from_B (B + mirror-averaged)"}
+SHORT = {"A_official": "A", "C_on_A": "C_on_A", "B_s0": "B", "C_from_B_s0": "C_from_B"}
+PAIRS = [("C_on_A", "A_official"), ("B_s0", "A_official"), ("C_from_B_s0", "B_s0"), ("C_from_B_s0", "A_official")]
+FIG_PAIRS = [("B_s0", "A_official"), ("C_from_B_s0", "B_s0")]
 MARK = {0: "o", 1: "s", 2: "^"}
 X_EXT, Y_EXT = (-0.5, 5.5), (-1.5, 1.5)  # chord units, TASK_CARD.md:36-37
 INK, MUTED, GRID = "#222222", "#666666", "#e3e3e3"
@@ -63,12 +68,13 @@ def main() -> int:
     a = ap.parse_args()
     plt.rcParams.update({"font.size": 8, "axes.labelcolor": INK, "axes.titlesize": 8, "pdf.fonttype": 42})
 
-    D = {r: np.load(a.runs / r / "local_eval" / "diag.npz") for r in ("A_official", "C_on_A")}
-    assert np.array_equal(D["A_official"]["case"], D["C_on_A"]["case"])
-    assert np.array_equal(D["A_official"]["start"], D["C_on_A"]["start"])
+    avail = [r for r in CONFIGS if (a.runs / r / "local_eval" / "diag.npz").is_file()]
+    D = {r: np.load(a.runs / r / "local_eval" / "diag.npz") for r in avail}
+    for r in avail:
+        assert np.array_equal(D["A_official"]["case"], D[r]["case"]) and np.array_equal(D["A_official"]["start"], D[r]["start"])
     dA = D["A_official"]
-    cases, fA, gA, cA = per_case(dA)
-    _, fC, gC, cC = per_case(D["C_on_A"])
+    PC = {r: per_case(D[r]) for r in avail}          # r -> (cases, full, final, curve)
+    cases, fA, gA, cA = PC["A_official"]
     first = {c: int(np.where(dA["case"] == c)[0][0]) for c in cases}
     ids = [str(dA["case_id"][first[c]]) for c in cases]
     k = np.array([float(dA["k"][first[c]]) for c in cases])
@@ -76,53 +82,66 @@ def main() -> int:
     kth = k * th
     reg = np.array([int(dA["regime"][first[c]]) for c in cases])
 
-    dfull, dfinal = fC - fA, gC - gA
-    by_regime = {REGIMES[r]: {"n": int((reg == r).sum()),
-                              "mean_delta_forecast_nmse": float(dfull[reg == r].mean()),
-                              "mean_delta_forecast_nmse_final": float(dfinal[reg == r].mean())}
-                 for r in np.unique(reg)}
-    lead_delta = (cC - cA).mean(0)
-    out = {
-        "provenance": "per-window lead NMSE from shared/local_eval.py (matches official scorer); official clip order",
-        "comparison": "C_on_A - A_official (negative = C better)",
-        "forecast_nmse": {"A": float(fA.mean()), "C": float(fC.mean()), **paired(dfull)},
-        "forecast_nmse_final": {"A": float(gA.mean()), "C": float(gC.mean()), **paired(dfinal)},
-        "by_regime": by_regime,
-        "lead_delta_case_avg": [float(v) for v in lead_delta],
-        "cases": [{"case_id": ids[i], "k": float(k[i]), "theta0_deg": float(np.degrees(th[i])),
-                   "k_theta0_rad": float(kth[i]), "regime": REGIMES[reg[i]],
-                   "A_nmse": float(fA[i]), "C_nmse": float(fC[i]), "delta_nmse": float(dfull[i]),
-                   "A_nmse_final": float(gA[i]), "C_nmse_final": float(gC[i]), "delta_nmse_final": float(dfinal[i])}
-                  for i in range(len(cases))],
-    }
-    (a.runs / "paired_C_on_A_vs_A.json").write_text(json.dumps(out, indent=1) + "\n", encoding="utf-8")
+    def compare(r1, r0):
+        dfull, dfinal = PC[r1][1] - PC[r0][1], PC[r1][2] - PC[r0][2]
+        return {
+            "comparison": f"{r1} - {r0} (negative = {r1} better)",
+            "forecast_nmse": {r0: float(PC[r0][1].mean()), r1: float(PC[r1][1].mean()), **paired(dfull)},
+            "forecast_nmse_final": {r0: float(PC[r0][2].mean()), r1: float(PC[r1][2].mean()), **paired(dfinal)},
+            "by_regime": {REGIMES[g]: {"n": int((reg == g).sum()),
+                                       "mean_delta_forecast_nmse": float(dfull[reg == g].mean()),
+                                       "mean_delta_forecast_nmse_final": float(dfinal[reg == g].mean()),
+                                       "better": int((dfull[reg == g] < 0).sum()), "worse": int((dfull[reg == g] > 0).sum())}
+                          for g in np.unique(reg)},
+            "lead_delta_case_avg": [float(v) for v in (PC[r1][3] - PC[r0][3]).mean(0)],
+            "cases": [{"case_id": ids[i], "k_theta0_rad": float(kth[i]), "regime": REGIMES[reg[i]],
+                       "delta_nmse": float(dfull[i]), "delta_nmse_final": float(dfinal[i])} for i in range(len(cases))],
+        }
+
+    pairs = [p for p in PAIRS if p[0] in avail and p[1] in avail]
+    allres = {"provenance": "per-window lead NMSE from shared/local_eval.py (matches official scorer); official clip order",
+              "per_case": [{"case_id": ids[i], "k": float(k[i]), "theta0_deg": float(np.degrees(th[i])),
+                            "k_theta0_rad": float(kth[i]), "regime": REGIMES[reg[i]],
+                            **{f"{r}_nmse": float(PC[r][1][i]) for r in avail},
+                            **{f"{r}_nmse_final": float(PC[r][2][i]) for r in avail}} for i in range(len(cases))],
+              "pairs": {f"{r1}-{r0}": compare(r1, r0) for r1, r0 in pairs}}
+    (a.runs / "paired_stats.json").write_text(json.dumps(allres, indent=1) + "\n", encoding="utf-8")
 
     # ---------------- Figure 1
     a.report.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.7))
+    fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.9))
     t = np.arange(1, 21) * 0.1
-    for r, curve in (("A_official", cA), ("C_on_A", cC)):
-        m = curve.mean(0)
-        ax[0].plot(t, m, color=COL[r], lw=2, label=LABEL[r])
+    for r in avail:
+        m = PC[r][3].mean(0)
+        ax[0].plot(t, m, color=COL[r], lw=2, ls="--" if r.startswith("C_") else "-",  # dashed = mirror-averaged
+                   label=f"{LABEL[r]}  {PC[r][1].mean():.3f}")
         ax[0].plot(t[-1], m[-1], "o", color=COL[r], ms=4, mec="white", mew=1)
-        ax[0].annotate(f"{m[-1]:.3f}", (t[-1], m[-1]), xytext=(4, 0), textcoords="offset points",
-                       va="center", fontsize=7, color=INK)
     ax[0].set_xlabel("lead time (c/U)")
     ax[0].set_ylabel("NMSE (clipped per lead, case-avg)")
-    ax[0].set_xlim(0, 2.25)
+    ax[0].set_xlim(0, 2.1)
     ax[0].set_ylim(bottom=0)
-    ax[0].legend(fontsize=7, frameon=False, loc="upper left")
+    ax[0].legend(fontsize=6.5, frameon=False, loc="lower right", title="config  forecast_nmse", title_fontsize=6.5)
     ax[0].set_title("(a) forecast error vs lead, 12 validation cases", loc="left", color=INK)
     style(ax[0])
-    for r in np.unique(reg):
-        s = reg == r
-        ax[1].scatter(kth[s], dfull[s], marker=MARK[r], s=36, facecolor=COL["C_on_A"], edgecolor="white", lw=1,
-                      label=f"{REGIMES[r]} (n={s.sum()})", zorder=3)
+    from matplotlib.lines import Line2D
+    handles = []
+    for r1, r0 in FIG_PAIRS:
+        if r1 not in avail or r0 not in avail:
+            continue
+        d = PC[r1][1] - PC[r0][1]
+        hollow = r1.startswith("C_")  # secondary encoding: hollow = averaging step, filled = training step
+        fc, ec = ("white", COL[r1]) if hollow else (COL[r1], "white")
+        for g in np.unique(reg):
+            s = reg == g
+            ax[1].scatter(kth[s], d[s], marker=MARK[g], s=34, facecolor=fc, edgecolor=ec, lw=1.5 if hollow else 1, zorder=3)
+        handles.append(Line2D([], [], ls="", marker="o", ms=6, mfc=fc, mec=ec, mew=1.5 if hollow else 1,
+                              label=f"{SHORT[r1]} − {SHORT[r0]}"))
+    handles += [Line2D([], [], ls="", marker=MARK[g], ms=6, mfc=MUTED, mec="white", label=REGIMES[g]) for g in np.unique(reg)]
     ax[1].axhline(0, color=INK, lw=0.8, zorder=2)
     ax[1].set_xlabel(r"$k\,\theta_0$ (rad)")
-    ax[1].set_ylabel(r"$\Delta$ case NMSE (C$-$A)")
-    ax[1].legend(fontsize=7, frameon=False, title="true regime", title_fontsize=7)
-    ax[1].set_title("(b) per-case change; below 0 = C better", loc="left", color=INK)
+    ax[1].set_ylabel(r"$\Delta$ case NMSE")
+    ax[1].legend(handles=handles, fontsize=6.5, frameon=False, loc="lower left", ncol=1)
+    ax[1].set_title("(b) per-case change; below 0 = first config better", loc="left", color=INK)
     style(ax[1])
     fig.tight_layout()
     fig.savefig(a.report / "fig1.pdf")
@@ -170,14 +189,14 @@ def main() -> int:
     plt.close(fig)
 
     # ---------------- console summary
-    for key in ("forecast_nmse", "forecast_nmse_final"):
-        s = out[key]
-        print(f"{key}: A {s['A']:.4f} C {s['C']:.4f} delta {s['mean']:+.4f} CI95 [{s['ci95'][0]:+.4f}, {s['ci95'][1]:+.4f}]"
-              f" improved {s['improved']}/{s['n_cases']} worsened {s['worsened']}")
-    print("by regime:", json.dumps(by_regime))
-    print("lead delta (case avg):", " ".join(f"{v:+.3f}" for v in lead_delta))
-    for i in np.argsort(kth):
-        print(f"  {ids[i]:7s} kθ0={kth[i]:.2f} {REGIMES[reg[i]]:14s} Δ={dfull[i]:+.4f} Δfinal={dfinal[i]:+.4f}")
+    for name, res in allres["pairs"].items():
+        print(name)
+        for key in ("forecast_nmse", "forecast_nmse_final"):
+            s = res[key]
+            print(f"  {key:20s} delta {s['mean']:+.4f} CI95 [{s['ci95'][0]:+.4f}, {s['ci95'][1]:+.4f}]"
+                  f" better {s['improved']}/{s['n_cases']} worse {s['worsened']}")
+        print("  by regime: " + "; ".join(f"{g} (n={v['n']}) {v['mean_delta_forecast_nmse']:+.4f} [{v['better']}b/{v['worse']}w]"
+                                         f" final {v['mean_delta_forecast_nmse_final']:+.4f}" for g, v in res["by_regime"].items()))
     print(f"fig2 case {ids[ci]} start {s0}; wrote {a.report/'fig1.pdf'}, {a.report/'fig2.pdf'}")
     return 0
 
