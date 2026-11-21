@@ -1,0 +1,46 @@
+{
+  "provenance": "local reimplementation (shared/local_eval.py), not the official SIDERIUS scorer",
+  "model": "runs/B_s0/final_model.pt",
+  "class": "WakeMirrorAvg",
+  "device": "cuda",
+  "windows": 48,
+  "metrics": {
+    "forecast_nmse": 0.18558599596016098,
+    "forecast_nmse_final": 0.27543407048315954,
+    "mean_field_rel_l2": 0.7940602654552298,
+    "psd_log_rmse": 0.9734363862141401,
+    "st_abs_error": 0.07010841121276219,
+    "regime_balanced_accuracy": 0.6111111111111112
+  },
+  "reflection_defect": 0.0,
+  "latency_ms_median": 6.258220500058087,
+  "run_seconds": 2.2,
+  "case_nmse": {
+    "tr_000": 0.22258300694899197,
+    "tr_005": 0.14782058083475338,
+    "tr_028": 0.21162709832949167,
+    "tr_031": 0.16186191794716887,
+    "h1_008": 0.21230608185298205,
+    "vb_000": 0.16209125529224544,
+    "vb_001": 0.18507524084775057,
+    "vb_002": 0.1434129381069963,
+    "vb_003": 0.24413146590196555,
+    "vb_004": 0.14211101615713764,
+    "vb_005": 0.18302697509145685,
+    "vb_006": 0.2109843742109915
+  },
+  "case_defect": {
+    "tr_000": 0.0,
+    "tr_005": 0.0,
+    "tr_028": 0.0,
+    "tr_031": 0.0,
+    "h1_008": 0.0,
+    "vb_000": 0.0,
+    "vb_001": 0.0,
+    "vb_002": 0.0,
+    "vb_003": 0.0,
+    "vb_004": 0.0,
+    "vb_005": 0.0,
+    "vb_006": 0.0
+  }
+}

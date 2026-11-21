@@ -54,7 +54,7 @@ K_RANGE, TH_RANGE = (2.0, 7.0), (math.radians(5.0), math.radians(35.0))
 
 
 def setup_torch() -> torch.device:
-    torch.set_num_threads(os.cpu_count())  # variant change (CPU mode): was 1; speed only
+    torch.set_num_threads(1)
     os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
