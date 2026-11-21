@@ -24,3 +24,5 @@ The human explicitly authorized temporary SIGSTOP of five overlapping P3 ablatio
 Read issue https://github.com/pranavvkrishna/GalileoHackathon-Optimus/issues/2 for reservations, the pause authorization, artifact handoff, and mechanism-control findings. Publishing a note does not prove another agent acknowledged it. All changes were additive; no existing files were deleted. No further Person 2 GPU training is queued.
 
 The JSON/CSV evidence, research rationale and action ledgers here support the human-authored report. Codex assisted with environment setup, literature/source inspection, verification code, metric audits, packaging and handoff; the original B implementation/run and P3 evaluations were already team work. Humans retain scientific judgments and submission decisions.
+
+Archive-use note: the full evidence directory retains the original `queue.py` helper. Treat it as audit evidence and use `python -I` when operating Python tools there, to avoid shadowing stdlib imports. The portable model ZIP contains no archival scheduling helpers.
