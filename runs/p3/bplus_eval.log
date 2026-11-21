@@ -1,0 +1,34 @@
+22:27:13 waiting for Bplus_s0
+23:20:54 Bplus finished, exit 0
+688deb4429a5415133e71b543cf88d172dcfc974bfd3d0ad5ab101e18128fdbe  /home/team/wake/runs/Bplus_s0/final_model.pt
+1377e784ac8ff5572ce314bfecf0d97ae4cb602837a08a7db14ce18798a7ad6a  /home/team/wake/variants/Bplus/pitching_airfoil_wake/baseline/run_baseline.py
+C_from_Bplus official evaluate exit 0
+Bplus_s0 local_eval exit 0
+Bplus_s0 gates exit 0
+synthetic: {"forecast_nmse": {"official": 1.5, "local_eval": 1.5}, "forecast_nmse_final": {"official": 0.5, "local_eval": 0.5}} | wrong order would give 1.75
+real diag: forecast_nmse 0.16700982 vs 0.16700982 (|d|=1.4e-09); final 0.23733439 vs 0.23733440 (|d|=2.1e-09)
+CLIP ORDER CHECKS PASSED
+C_from_Bplus_s0 local_eval exit 0
+C_from_Bplus_s0 gates exit 0
+synthetic: {"forecast_nmse": {"official": 1.5, "local_eval": 1.5}, "forecast_nmse_final": {"official": 0.5, "local_eval": 0.5}} | wrong order would give 1.75
+real diag: forecast_nmse 0.14398255 vs 0.14398255 (|d|=0.0e+00); final 0.21214112 vs 0.21214112 (|d|=0.0e+00)
+CLIP ORDER CHECKS PASSED
+B_s0: forecast_nmse 0.2094 final 0.3144
+C_from_B_s0: forecast_nmse 0.1856 final 0.2754
+Bplus_s0: forecast_nmse 0.1670 final 0.2373
+C_from_Bplus_s0: forecast_nmse 0.1440 final 0.2121
+Bplus_s0-B_s0 forecast_nmse: delta -0.0424 CI95 [-0.0477, -0.0371] improved 12/12
+Bplus_s0-B_s0 forecast_nmse_final: delta -0.0771 CI95 [-0.0994, -0.0553] improved 12/12
+C_from_Bplus_s0-C_from_B_s0 forecast_nmse: delta -0.0416 CI95 [-0.0475, -0.0362] improved 12/12
+C_from_Bplus_s0-C_from_B_s0 forecast_nmse_final: delta -0.0633 CI95 [-0.0826, -0.0461] improved 12/12
+C_from_Bplus_s0-Bplus_s0 forecast_nmse: delta -0.0230 CI95 [-0.0253, -0.0208] improved 12/12
+C_from_Bplus_s0-Bplus_s0 forecast_nmse_final: delta -0.0252 CI95 [-0.0354, -0.0150] improved 10/12
+fig2: None | wrote /home/team/person3/runs/bplus
+| configuration | seed | provenance | split | forecast_nmse | forecast_nmse_final | st_abs_error | utility | reflection_defect | health_status | latency_ms | train_seconds |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| A_official | 0 | organizer checkpoint (reference; not a local run) | validation (12 cases, 48 windows) | 0.2571 | 0.4105 | 0.0701 | 0.7476 | 0.1638 | pass | 5.6 | - |
+| B_s0 | 0 | local train, seed 0, reflection aug. p=0.5 | validation (12 cases, 48 windows) | 0.2094 | 0.3144 | 0.0701 | 0.7857 | 0.0505 | pass | 5.6 | 1068.0 |
+| C_from_B_s0 | 0 | B_s0 weights + mirror averaging, no training | validation (12 cases, 48 windows) | 0.1856 | 0.2754 | 0.0701 | 0.8048 | 0.0000 | pass | 6.3 | - |
+| Bplus_s0 | 0 | as B_s0 with all training windows (subsample 1) | validation (12 cases, 48 windows) | 0.1670 | 0.2373 | 0.0701 | 0.8197 | 0.0493 | pass | 1.3 | 3881.6 |
+| C_from_Bplus_s0 | 0 | Bplus_s0 weights + mirror averaging, no training | validation (12 cases, 48 windows) | 0.1440 | 0.2121 | 0.0701 | 0.8381 | 0.0000 | pass | 1.9 | - |
+23:21:10 P3_BPLUS_DONE

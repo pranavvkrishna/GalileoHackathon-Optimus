@@ -1,0 +1,46 @@
+{
+ "model": "/home/team/wake/runs/Bplus_s0/final_model.pt",
+ "class": "WakeMirrorAvg",
+ "windows": 48,
+ "forecast_nmse": 0.14398254618672326,
+ "health": {
+  "gate_id": "forecast_not_frozen_in_time",
+  "disposition": "blocking",
+  "passed": true,
+  "verdict": "passed",
+  "reason": "",
+  "metrics": {
+   "dispersion": 0.49122829571240156,
+   "mean": 4.096011554201444,
+   "min_dispersion": 0.05,
+   "n_samples": 48.0
+  }
+ },
+ "health_window_rms": {
+  "min": 3.4482340094069595,
+  "max": 5.037830983534923,
+  "mean": 4.096011570632896
+ },
+ "latency_ms": {
+  "median": 1.9447290001153306,
+  "p90": 1.9625900001301488,
+  "n": 50,
+  "device": "cuda",
+  "gpu": "NVIDIA H100 80GB HBM3",
+  "torch_threads": 1,
+  "other_gpu_processes": [],
+  "note": ""
+ },
+ "equivariance": {
+  "max_abs": 0.0,
+  "max_rel": 0.0
+ },
+ "checks": {
+  "shape [48,96822]": true,
+  "all outputs finite": true,
+  "forecast_nmse <= 1": true,
+  "health forecast_not_frozen_in_time (blocking)": true,
+  "latency median <= 100 ms": true
+ },
+ "all_passed": true
+}

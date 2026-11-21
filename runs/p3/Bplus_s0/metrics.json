@@ -1,0 +1,8 @@
+{
+  "forecast_nmse": 0.16700981692436184,
+  "forecast_nmse_final": 0.23733439694299352,
+  "mean_field_rel_l2": 0.7940602654552298,
+  "psd_log_rmse": 0.9734363862141401,
+  "regime_balanced_accuracy": 0.6111111111111112,
+  "st_abs_error": 0.07010841121276219
+}
