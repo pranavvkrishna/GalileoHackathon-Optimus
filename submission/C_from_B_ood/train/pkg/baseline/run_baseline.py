@@ -150,23 +150,35 @@ class WakeMirrorAvg(WakeBaseline):
 # Training-set kinematics range (train.npz, 810 cases): k in [2.0016, 6.9976], theta0 in [5.009, 34.995] deg.
 K_RANGE = (2.0016000270843506, 6.997600078582764)
 THETA0_DEG_RANGE = (5.008999824523926, 34.994998931884766)
+# Out-of-range shrinkage strength reached at the last lead (linear ramp from 0 at lead 1). Chosen on a proxy
+# extrapolation test (train k <= 5.49, score held-out training cases k 6.0-7.0): NMSE 0.99 -> 0.78 at 0.7.
+OOD_SHRINK_K = 0.7
+OOD_SHRINK_THETA0 = 0.0
 
 
-class WakeMirrorAvgClamp(WakeMirrorAvg):
-    """C with the forecast's k and theta0 input channels clamped to the training range.
+class WakeMirrorAvgOOD(WakeMirrorAvg):
+    """C, plus shrinkage of the forecast toward the mean of the 10 history frames when the kinematics lie
+    outside the training range. Inside the range it is exactly WakeMirrorAvg. The gate uses k and theta0,
+    which reflection leaves unchanged, and the history mean reflects with the fields, so reflection
+    equivariance is preserved. Statistics head unchanged. Same state_dict as WakeBaseline."""
 
-    Only the constant k/(2 pi) (channel HISTORY) and theta0 (channel HISTORY+1) maps are clamped, and only for the
-    forecast network; the history frames and the forcing phase (sin, cos of the true k*t) are untouched, and the
-    statistics head still sees the true kinematics. Inside the training range this is exactly WakeMirrorAvg.
-    mirror_x leaves channels HISTORY and HISTORY+1 unchanged, so reflection equivariance is preserved.
-    Same state_dict as WakeBaseline.
-    """
-
-    def forecast(self, x: torch.Tensor) -> torch.Tensor:
-        z = x.clone()
-        z[:, HISTORY] = z[:, HISTORY].clamp(K_RANGE[0] / (2 * math.pi), K_RANGE[1] / (2 * math.pi))
-        z[:, HISTORY + 1] = z[:, HISTORY + 1].clamp(math.radians(THETA0_DEG_RANGE[0]), math.radians(THETA0_DEG_RANGE[1]))
-        return super().forecast(z)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = super().forward(x)
+        k = x[:, HISTORY, 0, 0] * (2 * math.pi)          # constant maps: read one pixel
+        th = torch.rad2deg(x[:, HISTORY + 1, 0, 0])
+        a = torch.zeros_like(k)
+        a = torch.where((k > K_RANGE[1]) | (k < K_RANGE[0]), torch.full_like(a, OOD_SHRINK_K), a)
+        th_out = (th > THETA0_DEG_RANGE[1]) | (th < THETA0_DEG_RANGE[0])
+        a = torch.where(th_out, torch.maximum(a, torch.full_like(a, OOD_SHRINK_THETA0)), a)
+        if not bool((a > 0).any()):
+            return out
+        n = HORIZON * FIELD
+        future = out[:, :n].reshape(-1, HORIZON, NY, NX)
+        hist_mean = x[:, :HISTORY].mean(dim=1, keepdim=True)
+        ramp = torch.linspace(0, 1, HORIZON, device=x.device, dtype=x.dtype).view(1, HORIZON, 1, 1)
+        w = a.view(-1, 1, 1, 1) * ramp
+        future = (1 - w) * future + w * hist_mean
+        return torch.cat([future.flatten(1), out[:, n:]], dim=1)
 
 def compose_task():
     from workflows.task_composition import compose_run_task_bindings
