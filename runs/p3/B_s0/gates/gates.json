@@ -1,0 +1,48 @@
+{
+  "model": "/home/team/wake/runs/B_s0/final_model.pt",
+  "class": "WakeBaseline",
+  "windows": 48,
+  "forecast_nmse": 0.20939565597560048,
+  "health": {
+    "gate_id": "forecast_not_frozen_in_time",
+    "disposition": "blocking",
+    "passed": true,
+    "verdict": "passed",
+    "reason": "",
+    "metrics": {
+      "dispersion": 0.4599238171101568,
+      "mean": 4.094773948192596,
+      "min_dispersion": 0.05,
+      "n_samples": 48.0
+    }
+  },
+  "health_window_rms": {
+    "min": 3.442928358017528,
+    "max": 5.014271983898429,
+    "mean": 4.094773940500666
+  },
+  "latency_ms": {
+    "median": 5.616522500076826,
+    "p90": 5.62693149995539,
+    "n": 50,
+    "device": "cuda",
+    "gpu": "NVIDIA H100 80GB HBM3",
+    "torch_threads": 16,
+    "other_gpu_processes": [
+      "9463, 5002 MiB"
+    ],
+    "note": "measured while other GPU jobs ran; re-measure on an idle GPU"
+  },
+  "equivariance": {
+    "max_abs": 38.508968353271484,
+    "max_rel": 0.41585866211500955
+  },
+  "checks": {
+    "shape [48,96822]": true,
+    "all outputs finite": true,
+    "forecast_nmse <= 1": true,
+    "health forecast_not_frozen_in_time (blocking)": true,
+    "latency median <= 100 ms": true
+  },
+  "all_passed": true
+}

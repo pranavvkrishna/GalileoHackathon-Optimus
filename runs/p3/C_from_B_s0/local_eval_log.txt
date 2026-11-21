@@ -1,0 +1,14 @@
+{
+ "class": "WakeMirrorAvg",
+ "metrics": {
+  "forecast_nmse": 0.18558599037772164,
+  "forecast_nmse_final": 0.275434076751551,
+  "mean_field_rel_l2": 0.7940604129712975,
+  "psd_log_rmse": 0.973436802604207,
+  "st_abs_error": 0.07010871296127637,
+  "regime_balanced_accuracy": 0.6111111111111112
+ },
+ "reflection_defect": 0.0,
+ "latency_ms_median": 1490.3607910000574,
+ "run_seconds": 38.5
+}

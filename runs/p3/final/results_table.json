@@ -1,0 +1,62 @@
+[
+ {
+  "configuration": "A_official",
+  "seed": "0",
+  "provenance": "organizer checkpoint (reference; not a local run)",
+  "split": "validation (12 cases, 48 windows)",
+  "forecast_nmse": 0.25713305657854196,
+  "forecast_nmse_final": 0.41047747347099933,
+  "st_abs_error": 0.07010841121276219,
+  "utility": 0.7475546139286584,
+  "reflection_defect": 0.16375248705700624,
+  "health_status": "pass",
+  "latency_ms": 5.613248500026202,
+  "latency_device": "NVIDIA H100 80GB HBM3",
+  "train_seconds": null
+ },
+ {
+  "configuration": "C_on_A",
+  "seed": "0",
+  "provenance": "organizer checkpoint + mirror averaging, no training",
+  "split": "validation (12 cases, 48 windows)",
+  "forecast_nmse": 0.25615913863634365,
+  "forecast_nmse_final": 0.3696376837904991,
+  "st_abs_error": 0.07010871296127637,
+  "utility": 0.7483335471167408,
+  "reflection_defect": 0.0,
+  "health_status": "pass",
+  "latency_ms": 6.29030100003547,
+  "latency_device": "NVIDIA H100 80GB HBM3",
+  "train_seconds": null
+ },
+ {
+  "configuration": "B_s0",
+  "seed": "0",
+  "provenance": "local train, seed 0, reflection aug. p=0.5",
+  "split": "validation (12 cases, 48 windows)",
+  "forecast_nmse": 0.20939565554340203,
+  "forecast_nmse_final": 0.3144083686347375,
+  "st_abs_error": 0.07010841121276219,
+  "utility": 0.7857445347567703,
+  "reflection_defect": 0.050531380160055074,
+  "health_status": "pass",
+  "latency_ms": 5.616522500076826,
+  "latency_device": "NVIDIA H100 80GB HBM3",
+  "train_seconds": 1068.0
+ },
+ {
+  "configuration": "C_from_B_s0",
+  "seed": "0",
+  "provenance": "B_s0 weights + mirror averaging, no training",
+  "split": "validation (12 cases, 48 windows)",
+  "forecast_nmse": 0.18558599037772164,
+  "forecast_nmse_final": 0.275434076751551,
+  "st_abs_error": 0.07010871296127637,
+  "utility": 0.8047920657236384,
+  "reflection_defect": 0.0,
+  "health_status": "pass",
+  "latency_ms": 6.276366000065536,
+  "latency_device": "NVIDIA H100 80GB HBM3",
+  "train_seconds": null
+ }
+]

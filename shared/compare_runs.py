@@ -158,14 +158,14 @@ def main() -> int:
     if pairs:
         for j, (x, y) in enumerate(pairs):
             dfull = S[x][1] - S[y][1]
-            # panel (b) has its own legend: each pair takes the next fixed slot plus its own marker
-            ax[1].scatter(kth, dfull, marker=MARKERS[j], s=30, facecolor=SERIES[j], edgecolor="white", lw=1,
+            # colour follows the pair's first run (same colour as in panel a); marker distinguishes pairs
+            ax[1].scatter(kth, dfull, marker=MARKERS[j], s=30, facecolor=color[x], edgecolor="white", lw=1,
                           label=f"{x} − {y}", zorder=3)
         ax[1].axhline(0, color=INK, lw=0.8, zorder=2)
         ax[1].set_xlabel(r"$k\,\theta_0$ (rad)")
         ax[1].set_ylabel(r"$\Delta$ case NMSE")
         ax[1].legend(fontsize=7, frameon=False)
-        ax[1].set_title("(b) per-case paired change; below 0 = first run better", loc="left", color=INK)
+        ax[1].set_title("(b) per-case paired change (<0: first run better)", loc="left", color=INK)
         style(ax[1])
     fig.tight_layout()
     fig.savefig(a.out_dir / "fig1.pdf")
