@@ -1,0 +1,122 @@
+% Report skeleton (P3). Structure and page budget follow spec.md §9.
+% TODO(all): if the organizers publish an official template, move these sections into it unchanged;
+%            no margin/font/spacing compression. Body incl. AI statement <= 4 pages; references separate.
+% Numbers marked [measured] come from runs/ via shared/*.py; regenerate, never retype.
+% Scientific judgments are left as TODO for the team to author (spec §1: "The human team authors the
+% final scientific judgments").
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,booktabs,amsmath,amssymb,hyperref}
+\newcommand{\todo}[1]{\textbf{[TODO: #1]}}
+
+\title{Does Reflection Symmetry Improve Pitching-Wing Wake Forecasts at Unseen Kinematics?}
+\author{\todo{team name / members}}
+\date{Siderius Hackathon Track 2 --- 21 November 2026}
+
+\begin{document}
+\maketitle
+
+% ---------------------------------------------------------------- 0.25 page, owner: all
+\begin{abstract}
+\todo{one sentence each: question; comparison (A: released CNN, B: + reflection augmentation,
+C: B + forecast reflection averaging); result with paired case-level change and interval;
+key limitation (12 validation cases, one training seed).}
+\end{abstract}
+
+% ---------------------------------------------------------------- 0.45 page, owner: P2
+\section{Goal and hypothesis}
+The task forecasts 20 future vorticity frames of the wake of a NACA0012 pitching at
+$\mathrm{Re}=500$ from 10 past frames and the kinematics $(k, \theta_0, \text{phase})$.
+Reflecting $y\to-y$ maps the problem onto itself: vorticity changes sign and the rows flip,
+the pitching phase advances by $\pi$ ($\sin$ and $\cos$ of the phase both negate), and
+$k$, $\theta_0$ are unchanged. We write $G$ for this map on inputs and $S$ for it on forecasts.
+
+\todo{P2: physical justification of $G,S$ (geometry, motion, boundaries); state that individual
+wakes may be deflected/asymmetric, so we test map equivariance $F(Gx)=S(F(x))$, not symmetric states.}
+
+\noindent\textbf{Hypothesis.} B reduces the reflection defect; C enforces it exactly and may improve
+forecast accuracy. \textbf{Contradicting evidence:} unchanged or worse paired case-level forecast
+NMSE despite better consistency. \todo{predeclared practical tolerance for ``negligible'' gains: \_\_\_}
+
+% ---------------------------------------------------------------- 0.55 page, owner: all
+\section{Research trajectory}
+\begin{tabular}{p{0.16\linewidth}p{0.2\linewidth}p{0.2\linewidth}p{0.2\linewidth}p{0.14\linewidth}}
+\toprule
+Run & Why & Change & Result & Next decision \\
+\midrule
+A\_official & reference/fallback & none (organizer weights) & NMSE 0.2571 [measured] & \todo{} \\
+C\_on\_A & cheap symmetry test & mirror averaging at inference & NMSE 0.2562 [measured] & \todo{} \\
+B\_s0 & learn symmetry & $p{=}0.5$ reflection augmentation & \todo{} & \todo{} \\
+A\_s0 & matched control & none, local seed 0 & \todo{} & \todo{} \\
+C\_from\_B\_s0 & exact consistency & averaging on B & \todo{} & \todo{} \\
+\bottomrule
+\end{tabular}
+
+% ---------------------------------------------------------------- 1.45 pages, owner: P1/P3
+\section{Final model and comparisons}
+\textbf{Configurations.} A and B use the released width-64 encoder--decoder, the same seed-0
+initialization, windows, optimizer, schedule and epochs; B differs only by per-example reflection of
+the full history and all 20 targets with probability 0.5 (independent RNG, so A's window order is
+unchanged). C averages the complete forecasts of B on $x$ and $Gx$:
+$F_C(x)=\tfrac12\big(F(x)+S(F(Gx))\big)$, which satisfies $F_C(Gx)=S(F_C(x))$ exactly and costs
+two forward passes. The statistics head (mean field, spectrum, Strouhal, regime) is untouched.
+
+\textbf{Evaluation.} Official scorer; per-lead NMSE is clipped at 4 \emph{before} averaging (verified
+with a synthetic counterexample: 1.5 vs.\ 1.75, \texttt{shared/test\_clip\_order.py}). Paired
+case-level differences over the same 12 validation cases with a 2000-resample case bootstrap; the
+interval describes case-sampling variability only, not seed noise or a population gain.
+Reflection defect $\|F(Gx)-S(F(x))\|^2 / (\|F(x)\|^2+\|F(Gx)\|^2)$, averaged by case.
+
+\begin{table}[h]\centering\scriptsize
+% regenerate: shared/results_table.py --out report/results_table ...
+\IfFileExists{results_table.tex}{\input{results_table.tex}}{\todo{results\_table.tex not generated yet}}
+\caption{Validation results. Utility $=[2\,\mathrm{clip}(1-\mathrm{NMSE})+0.5\,\mathrm{clip}(1-\mathrm{St\,err}/0.3)]/2.5$.
+Latency: median batch-1 forward, \todo{device; idle GPU?}.}
+\label{tab:results}
+\end{table}
+
+\begin{figure}[h]\centering
+\IfFileExists{fig1.pdf}{\includegraphics[width=\linewidth]{fig1.pdf}}{\todo{fig1.pdf}}
+\caption{(a) Clipped NMSE by forecast lead (cases averaged). (b) Paired per-case change vs.\ $k\theta_0$.
+\todo{update to A\_s0/B\_s0/C\_from\_B\_s0 via shared/compare\_runs.py}}
+\label{fig:lead}
+\end{figure}
+
+\textbf{Gates.} \todo{health (sample\_dispersion\_floor $\ge 0.05$), finiteness, NMSE$\le1$,
+latency $\le$ 100\,ms for the submitted model; C\_on\_A passes all [measured]: dispersion 0.389,
+6.3\,ms on H100 while another job ran.}
+
+\textbf{Submission.} \todo{P1: selected configuration, submission ID, code revision, ZIP sha256,
+reproduction result.}
+
+% ---------------------------------------------------------------- 0.65 page, owner: all (human-authored)
+\section{Insights}
+\todo{At most three. Each: claim / evidence (table, figure, paired interval) / limitation.
+Team-authored; do not let an AI write these judgments.}
+
+\begin{figure}[h]\centering
+\IfFileExists{fig2.pdf}{\includegraphics[width=0.85\linewidth]{fig2.pdf}}{\todo{fig2.pdf}}
+\caption{Truth vs.\ forecasts at lead 1 and lead 20, first window of the case nearest the median
+reference error (selected by rule, not by gain). Shared symmetric colour scale.}
+\label{fig:fields}
+\end{figure}
+
+% ---------------------------------------------------------------- 0.30 page, owner: all
+\section{Limitations and next experiment}
+12 validation cases; one training seed per configuration; model selected on validation; C doubles
+inference cost; equivariance is guaranteed for the averaged map, not an improvement in clipped NMSE;
+the 10-frame input may omit dynamical state. Next control: \todo{same-cost non-symmetry two-pass
+ensemble, or a second matched seed}.
+
+% ---------------------------------------------------------------- 0.35 page, owner: P1
+\section{Reproducibility, contributions and AI use}
+\todo{exact commands, environment (torch 2.10.0+cu128, NVIDIA H100 80GB), seeds, train-only fitting,
+links to code and evidence; roles of each member; verified AI uses (what was generated, how checked).}
+
+\clearpage
+\begin{thebibliography}{9}\small
+\bibitem{bose2021} Bose et al.\ (2021), pitching--heaving wake transitions. \todo{full ref}
+\bibitem{elesedy2021} B.~Elesedy and S.~Zaidi (2021), Provably strict generalisation benefit for equivariant models. \todo{venue}
+\bibitem{fromme2025} Fromme et al.\ (2025), equivariant fluid surrogates. \todo{full ref}
+\end{thebibliography}
+\end{document}
