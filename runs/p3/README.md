@@ -52,3 +52,22 @@ Packaging (P1): `symbol: WakeMirrorAvg`; `train_command` = the official command 
 train-only reproduction (about 18 min on the H100), and the GPU is currently shared with `Bplus_s0`.
 
 The fallback, already packaged, is `submission/C_on_A`. It is valid but shows no measurable gain over A_official.
+
+## Extrapolation proxies and the C_from_B_ood submission (added 15:05 PST)
+On the leaderboard, C_from_B_s0 scored 0.3620. Weighting the official baseline's hidden-tier scores by case count
+gives about 0.394. Most of that comes from T3f (k 7.5-9, outside the training range k <= 7), where the baseline
+scores 1.35. Our validation set contains no extrapolation, so we built proxies from the training data. Each proxy
+uses the B recipe with 12 epochs; scores are forecast_nmse on the held-out cases.
+
+| proxy | C as submitted | hard k clamp | shrink toward history mean, ramp to 0.7 by lead 20 |
+|---|---|---|---|
+| frequency: train k <= 5.49, test 132 cases k 6.0-7.0 | 0.9925 | 1.0446 (worse) | **0.7807** |
+| amplitude: train theta0 <= 30 deg, test 83 cases theta0 31-35 | 0.3136 | - | 0.4414 (worse; ramp 0.1: 0.3169) |
+
+Measured on validation: shrinking every forecast hurts (0.1856 -> 0.1878 at 5%), so shrinkage has to be gated on
+out-of-range kinematics. **C_from_B_ood** (`submission/C_from_B_ood`, ZIP sha256 `f456f5f5...`): same weights and
+train_command as C_from_B. When k is outside [2.0016, 6.9976], the forecast is shrunk toward the mean of the 10
+history frames, with the weight ramping linearly from 0 to 0.7 over the 20 leads. theta0 is not gated (strength 0),
+because shrinkage hurt on the amplitude proxy. Validation outputs are bit-identical to C_from_B, all gates pass, and
+equivariance and the statistics outputs are unchanged. Only the T3f cases are affected.
+The clamp package was removed because the frequency proxy shows the clamp hurts.
