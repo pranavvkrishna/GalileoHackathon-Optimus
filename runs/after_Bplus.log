@@ -1,0 +1,6 @@
+23:20:56 Bplus finished, exit 0
+C eval exit 0
+local_eval Bplus exit 0
+local_eval C exit 0
+688deb4429a5415133e71b543cf88d172dcfc974bfd3d0ad5ab101e18128fdbe  runs/Bplus_s0/final_model.pt
+23:21:05 AFTER_BPLUS_DONE
