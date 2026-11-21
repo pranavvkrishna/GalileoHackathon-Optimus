@@ -45,10 +45,11 @@ NMSE despite better consistency. \todo{predeclared practical tolerance for ``neg
 Run & Why & Change & Result & Next decision \\
 \midrule
 A\_official & reference/fallback & none (organizer weights) & NMSE 0.2571 [measured] & \todo{} \\
-C\_on\_A & cheap symmetry test & mirror averaging at inference & NMSE 0.2562 [measured] & \todo{} \\
-B\_s0 & learn symmetry & $p{=}0.5$ reflection augmentation & \todo{} & \todo{} \\
-A\_s0 & matched control & none, local seed 0 & \todo{} & \todo{} \\
-C\_from\_B\_s0 & exact consistency & averaging on B & \todo{} & \todo{} \\
+C\_on\_A & cheap symmetry test & mirror averaging at inference & NMSE 0.2562; $\Delta$ $-0.001$, CI $[-0.072,+0.059]$ [measured] & \todo{} \\
+B\_s0 & learn symmetry & $p{=}0.5$ reflection augmentation, 40 epochs, 1068\,s & NMSE 0.2094; defect 0.051 vs 0.164 [measured] & \todo{} \\
+A\_s0 & matched control & none, local seed 0 & stopped at epoch 3 when the GPU was reassigned; no result & \todo{} \\
+C\_from\_B\_s0 & exact consistency & averaging on B & NMSE 0.1856; $\Delta$ vs B $-0.024$, CI $[-0.027,-0.020]$, 12/12 cases [measured] & \todo{} \\
+Bplus\_s0 & more data & B with all training windows (3$\times$) & \todo{pending: runs/p3/bplus} & \todo{} \\
 \bottomrule
 \end{tabular}
 
@@ -69,22 +70,26 @@ Reflection defect $\|F(Gx)-S(F(x))\|^2 / (\|F(x)\|^2+\|F(Gx)\|^2)$, averaged by 
 
 \begin{table}[h]\centering\scriptsize
 % regenerate: shared/results_table.py --out report/results_table ...
-\IfFileExists{results_table.tex}{\input{results_table.tex}}{\todo{results\_table.tex not generated yet}}
+\IfFileExists{../runs/p3/final/results_table.tex}{\input{../runs/p3/final/results_table.tex}}{\todo{results\_table.tex not generated yet}}
 \caption{Validation results. Utility $=[2\,\mathrm{clip}(1-\mathrm{NMSE})+0.5\,\mathrm{clip}(1-\mathrm{St\,err}/0.3)]/2.5$.
 Latency: median batch-1 forward, \todo{device; idle GPU?}.}
 \label{tab:results}
 \end{table}
 
 \begin{figure}[h]\centering
-\IfFileExists{fig1.pdf}{\includegraphics[width=\linewidth]{fig1.pdf}}{\todo{fig1.pdf}}
-\caption{(a) Clipped NMSE by forecast lead (cases averaged). (b) Paired per-case change vs.\ $k\theta_0$.
-\todo{update to A\_s0/B\_s0/C\_from\_B\_s0 via shared/compare\_runs.py}}
+\IfFileExists{../runs/p3/final/fig1.pdf}{\includegraphics[width=\linewidth]{../runs/p3/final/fig1.pdf}}{\todo{fig1.pdf}}
+\caption{(a) Clipped NMSE by forecast lead (cases averaged). (b) Paired per-case change vs.\ $k\theta_0$;
+comparisons against A\_official are not matched (organizer checkpoint, no local A).}
 \label{fig:lead}
 \end{figure}
 
-\textbf{Gates.} \todo{health (sample\_dispersion\_floor $\ge 0.05$), finiteness, NMSE$\le1$,
-latency $\le$ 100\,ms for the submitted model; C\_on\_A passes all [measured]: dispersion 0.389,
-6.3\,ms on H100 while another job ran.}
+\textbf{Gates} [measured, \texttt{shared/health\_gate.py} with the task's own health view and the framework
+check]. All four configurations pass the shape, finiteness, NMSE$\le1$, \texttt{forecast\_not\_frozen\_in\_time}
+(dispersion 0.442, 0.389, 0.460, 0.457 for A\_official, C\_on\_A, B\_s0, C\_from\_B\_s0; floor 0.05) and
+latency gates (median batch-1 forward 5.6\,ms single-pass, 6.3\,ms mirror-averaged, NVIDIA H100, measured
+while another training job shared the GPU). Statistics outputs are identical between B\_s0 and C\_from\_B\_s0.
+Forecast equivariance error $\max|F(Gx)-S(F(x))|$ is exactly 0 for both C models (0.79 and 0.42 relative for
+A\_official and B\_s0).
 
 \textbf{Submission.} \todo{P1: selected configuration, submission ID, code revision, ZIP sha256,
 reproduction result.}
@@ -95,7 +100,7 @@ reproduction result.}
 Team-authored; do not let an AI write these judgments.}
 
 \begin{figure}[h]\centering
-\IfFileExists{fig2.pdf}{\includegraphics[width=0.85\linewidth]{fig2.pdf}}{\todo{fig2.pdf}}
+\IfFileExists{../runs/p3/final/fig2.pdf}{\includegraphics[width=0.85\linewidth]{../runs/p3/final/fig2.pdf}}{\todo{fig2.pdf}}
 \caption{Truth vs.\ forecasts at lead 1 and lead 20, first window of the case nearest the median
 reference error (selected by rule, not by gain). Shared symmetric colour scale.}
 \label{fig:fields}
@@ -103,7 +108,10 @@ reference error (selected by rule, not by gain). Shared symmetric colour scale.}
 
 % ---------------------------------------------------------------- 0.30 page, owner: all
 \section{Limitations and next experiment}
-12 validation cases; one training seed per configuration; model selected on validation; C doubles
+No matched local A (the A\_s0 run stopped at epoch 3), so B vs.\ A compares against the organizer
+checkpoint and mixes augmentation with any local-vs-organizer training difference; the C vs.\ B comparison
+is matched (same weights). 12 validation cases; one training seed per configuration; model selected on
+validation; local validation NMSE is not a leaderboard score; C doubles
 inference cost; equivariance is guaranteed for the averaged map, not an improvement in clipped NMSE;
 the 10-frame input may omit dynamical state. Next control: \todo{same-cost non-symmetry two-pass
 ensemble, or a second matched seed}.
