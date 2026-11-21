@@ -1,0 +1,6 @@
+{
+  "file": "person2-evidence-backup.tar.gz",
+  "sha256": "860feb4b686c8d98630bc8c73f4009ecad0e88b91af2e65c4a2c8bd3791bd554",
+  "bytes": 35610535,
+  "purpose": "Preserve all evidence-source/log files without following the already-backed-up dataset link"
+}

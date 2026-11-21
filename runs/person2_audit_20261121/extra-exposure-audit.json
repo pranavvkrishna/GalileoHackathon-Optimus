@@ -1,0 +1,14 @@
+{
+  "comparison": "C-from-Bplus minus C-from-B; extra-exposure comparison",
+  "C_from_B_nmse": 0.18558599037772164,
+  "C_from_Bplus_nmse": 0.14398254618672326,
+  "paired_mean": -0.041603444190998366,
+  "relative_reduction": 0.22417340935230734,
+  "case_bootstrap95": [
+    -0.04741480286122601,
+    -0.03619316975945031
+  ],
+  "improved_cases": 12,
+  "cases": 12,
+  "limits": "Same architecture/seed but Bplus uses 3x training windows and optimizer steps at40epochs. This does not isolate augmentation, sample diversity, or optimization budget. One seed; validation selection not corrected. No full Bplus reproduction yet."
+}

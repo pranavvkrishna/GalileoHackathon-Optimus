@@ -1,0 +1,40 @@
+{
+  "provenance": "Independent CPU recomputation of P3 diagnostics; no fitting or GPU work",
+  "cases": 12,
+  "windows": 48,
+  "B_nmse": 0.20939566071560753,
+  "C_nmse": 0.18558599037772164,
+  "relative_reduction": 0.11370660813369571,
+  "paired_delta": -0.023809670337885905,
+  "case_bootstrap_95": [
+    -0.027210298346594074,
+    -0.020464037485072584
+  ],
+  "cases_improved": 12,
+  "lead_delta": [
+    -0.01999720455459567,
+    -0.025364474933191623,
+    -0.025270993757593754,
+    -0.02441932587810307,
+    -0.02200724925330487,
+    -0.020034797475575017,
+    -0.02321969388341476,
+    -0.031030125497437343,
+    -0.029038302013030533,
+    -0.024702139565136328,
+    -0.024083090105525336,
+    -0.023200227537140215,
+    -0.02248224285079789,
+    -0.0224989778906759,
+    -0.008324118363563428,
+    -0.008732673137617155,
+    -0.02315976220954286,
+    -0.025694763103197942,
+    -0.03395892064294769,
+    -0.0389743241053267
+  ],
+  "leads_improved": 20,
+  "B_reflection_defect": 0.05053138016005509,
+  "C_reflection_defect": 0.0,
+  "limits": "One training seed, 12 validation cases; interval does not measure seed uncertainty or account for validation selection. Matched local A incomplete; no augmentation-only causal claim."
+}

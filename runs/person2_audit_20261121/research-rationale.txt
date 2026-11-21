@@ -1,0 +1,21 @@
+Focused paper research: decision rationale
+
+1. Lyle et al. 2020, On the Benefits of Invariance in Neural Networks, sections 3–4 and experiments. https://arxiv.org/abs/2005.00178
+Evidence: augmentation and averaging are different mechanisms; learned invariance can fail under distribution shift. Transfer limit: invariance setting, not a direct proof for vector-field equivariance and clipped NMSE. Decision: measure reflection defect separately from forecast accuracy; retain B-versus-C ablation.
+
+2. Elesedy & Zaidi 2021, Provably Strict Generalisation Benefit for Equivariant Models, section 6 Lemma 6 and Appendix B.1.1. https://arxiv.org/abs/2102.10333
+Evidence: population squared-risk projection benefit requires invariant input measure and equivariant target; invariant-measure assumption is substantive. Decision: algebraic C equivariance can be claimed for defined valid involutions; fixed 12-case clipped-NMSE improvement remains empirical. No universal guarantee.
+
+3. Wang, Walters & Yu 2021, Incorporating Symmetry into Deep Dynamics Models for Improved Generalization, sections 2.4, 5.3 and conclusion. https://arxiv.org/abs/2002.03061
+Evidence: comparisons on convection/ocean dynamics, different behavior across metrics; forcing/boundaries must transform with the problem. Decision: no transfer of the full Navier–Stokes symmetry group into our moving-boundary problem; retain physically conditioned reflection and audit grid/boundaries.
+
+4. Wang, Walters & Yu 2022, Approximately Equivariant Networks for Imperfectly Symmetric Dynamics, sections 5.1–5.2. https://proceedings.mlr.press/v162/wang22aa.html
+Evidence: relaxed equivariance can outperform strict constraints on imperfect-symmetry benchmarks; large symmetry regularization can hinder learning. Decision: document unresolved discretization caveat; do not infer validity from involution alone or add a new architecture late in the sprint.
+
+5. Wang, Walters & Yu 2022, Data Augmentation vs. Equivariant Networks: A Theory of Generalization on Dynamics Forecasting, sections 3–4. https://arxiv.org/abs/2206.09450
+Evidence: temporal-distribution discrepancy and symmetry affect generalization bounds; authors note upper bounds can be arbitrarily loose. Decision: no claim that reflection establishes unseen-amplitude/frequency robustness from theory alone.
+
+6. Bose, Gupta & Sarkar 2021, Dynamic interlinking between near- and far-field wakes behind a pitching–heaving airfoil, methods and wake-transition results. https://doi.org/10.1017/jfm.2020.1030
+Evidence: stable deflected wakes and switching are valid states. Their pitching-heaving Re1000 system differs from the current pure-pitching Re500 task. Decision: model-map equivariance does not imply each field is symmetric or self-mirrors half a period later; do not transfer transition thresholds or claim a chaos barrier.
+
+Recommended claims are conditional on measured results. Case bootstrap is descriptive sampling variability only, not training-seed uncertainty or correction for validation selection. Extra-window Bplus is a separate training-exposure experiment. Ordinary ensemble control is future work if required training/reproduction/submission time cannot be protected.

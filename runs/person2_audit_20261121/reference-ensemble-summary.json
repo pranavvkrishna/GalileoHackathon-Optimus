@@ -1,0 +1,30 @@
+{
+  "label": "exploratory official-reference A plus locally-trained B forecast ensemble; equal weights fixed at0.5",
+  "scores": {
+    "A_official": {
+      "forecast_nmse": 0.25713305657854196,
+      "forecast_nmse_final": 0.41047747347099933
+    },
+    "B": {
+      "forecast_nmse": 0.20939565554340203,
+      "forecast_nmse_final": 0.3144083686347375
+    },
+    "C": {
+      "forecast_nmse": 0.18558599596016098,
+      "forecast_nmse_final": 0.27543407048315954
+    },
+    "reference_ensemble": {
+      "forecast_nmse": 0.189680187342289,
+      "forecast_nmse_final": 0.28552364423317284
+    }
+  },
+  "C_minus_ensemble": -0.004094191382128035,
+  "case_bootstrap95": [
+    -0.023707036029205625,
+    0.012396925765552621
+  ],
+  "C_better_cases": 5,
+  "cases": 12,
+  "rationale": "Use existing predictions to examine generic two-model averaging without new fitting or GPU work",
+  "limitations": "Organizer A is not a matched local control. Members share the official initial state but differ in augmentation and execution provenance. This is not a clean independent-seed same-cost causal control. It stores two trained models versus one for C. No ensemble health/latency measurement or submission is claimed. B statistics retained. Case interval omits training-seed uncertainty and validation-selection effects."
+}
