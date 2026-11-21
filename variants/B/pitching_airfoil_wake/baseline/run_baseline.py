@@ -54,7 +54,7 @@ K_RANGE, TH_RANGE = (2.0, 7.0), (math.radians(5.0), math.radians(35.0))
 
 
 def setup_torch() -> torch.device:
-    torch.set_num_threads(1)
+    torch.set_num_threads(os.cpu_count())  # variant change (CPU mode): was 1; speed only
     os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
@@ -65,6 +65,19 @@ def setup_torch() -> torch.device:
 
 def block(cin: int, cout: int) -> nn.Sequential:
     return nn.Sequential(nn.Conv2d(cin, cout, 3, padding=1), nn.GELU(), nn.Conv2d(cout, cout, 3, padding=1), nn.GELU())
+
+
+def mirror_x(x: torch.Tensor) -> torch.Tensor:
+    """Reflection y -> -y of a model input: vorticity row-flip + sign flip; forcing phase + pi."""
+    out = x.clone()
+    out[:, :HISTORY] = -x[:, :HISTORY].flip(-2)
+    out[:, HISTORY + 2:HISTORY + 4] = -x[:, HISTORY + 2:HISTORY + 4]
+    return out
+
+
+def mirror_field(z: torch.Tensor) -> torch.Tensor:
+    """Reflection of vorticity fields [..., 48, 96]."""
+    return -z.flip(-2)
 
 
 class WakeBaseline(nn.Module):
@@ -121,6 +134,16 @@ class WakeBaseline(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.cat([self.forecast(x).flatten(1), self.statistics(x)], dim=1)
+
+
+class WakeMirrorAvg(WakeBaseline):
+    """Config C: reflection-averaged forecast; statistics head unchanged; same state_dict as WakeBaseline."""
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        f = self.forecast(x)
+        reflected = mirror_field(self.forecast(mirror_x(x)))
+        future = 0.5 * (f + reflected)
+        return torch.cat([future.flatten(1), self.statistics(x)], dim=1)
 
 
 def compose_task():
@@ -261,6 +284,7 @@ def command_train(args) -> int:
     steps = EPOCHS * math.ceil(len(pairs) / BATCH_SIZE)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=LEARNING_RATE, total_steps=max(steps, 1), pct_start=0.1)
     generator = torch.Generator().manual_seed(args.seed)
+    aug_gen = torch.Generator().manual_seed(args.seed + 1_000_003)  # independent: window order identical to A
     torch.manual_seed(args.seed)
     started = time.perf_counter()
     model.train()
@@ -269,6 +293,11 @@ def command_train(args) -> int:
         running = 0.0
         for start in range(0, len(order), BATCH_SIZE):
             x, y = batch(order[start : start + BATCH_SIZE])
+            if args.mirror:
+                flip = (torch.rand(len(x), generator=aug_gen) < 0.5).to(device)
+                if bool(flip.any()):
+                    x[flip] = mirror_x(x[flip])
+                    y[flip] = mirror_field(y[flip])
             optimizer.zero_grad(set_to_none=True)
             loss = ((model.forecast(x) - y) ** 2).mean() / VORT_SCALE**2
             loss.backward()
@@ -294,8 +323,8 @@ def command_train(args) -> int:
     return 0
 
 
-def _load_model(path: Path, device) -> WakeBaseline:
-    model = WakeBaseline()
+def _load_model(path: Path, device, cls=None) -> WakeBaseline:
+    model = (cls or WakeBaseline)()
     model.load_state_dict(load_state(path))
     return model.to(device)
 
@@ -303,7 +332,7 @@ def _load_model(path: Path, device) -> WakeBaseline:
 def command_evaluate(args) -> int:
     device = setup_torch()
     composition = compose_task()
-    model = _load_model(args.model, device)
+    model = _load_model(args.model, device, WakeMirrorAvg if getattr(args, "mirror_avg", False) else None)
     started = time.perf_counter()
     metrics = evaluate_model(model, composition, args.data_dir, args.output_dir, device)
     print(json.dumps({"metrics": metrics, "evaluate_seconds": round(time.perf_counter() - started, 1)}, sort_keys=True))
@@ -316,7 +345,7 @@ def command_predict(args) -> int:
 
     device = setup_torch()
     composition = compose_task()
-    model = _load_model(args.model, device)
+    model = _load_model(args.model, device, WakeMirrorAvg if getattr(args, "mirror_avg", False) else None)
     scope = composition.task_data_path._selection(
         args.split_file, ScopeBuildRequest(round_kind="formal", selection_strategy="snapshot", portion=1.0), False)
     path = write_predictions(model, composition, scope, args.data_dir, args.output_dir, device)
@@ -332,12 +361,15 @@ def main(argv=None) -> int:
     p.add_argument("--train-only", action="store_true", help="save trained artifact without post-training validation")
     p.add_argument("--data_dir", type=Path, required=True); p.add_argument("--seed", type=int, required=True)
     p.add_argument("--output_dir", type=Path, required=True); p.add_argument("--init_model", type=Path)
+    p.add_argument("--mirror", action="store_true", help="random y-reflection augmentation, p=0.5 per example")
     p = sub.add_parser("evaluate")
     p.add_argument("--data_dir", type=Path, required=True); p.add_argument("--model", type=Path, required=True)
     p.add_argument("--output_dir", type=Path, required=True)
+    p.add_argument("--mirror_avg", action="store_true", help="evaluate as WakeMirrorAvg (config C)")
     p = sub.add_parser("predict")
     p.add_argument("--data_dir", type=Path, required=True); p.add_argument("--split_file", required=True)
     p.add_argument("--model", type=Path, required=True); p.add_argument("--output_dir", type=Path, required=True)
+    p.add_argument("--mirror_avg", action="store_true", help="evaluate as WakeMirrorAvg (config C)")
     args = cli.parse_args(argv)
     return {"init": command_init, "train": command_train, "evaluate": command_evaluate, "predict": command_predict}[args.command](args)
 
