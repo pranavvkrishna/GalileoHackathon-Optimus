@@ -6,3 +6,4 @@ runs/**/*.pt
 __pycache__/
 original/**/*.pt
 variants/**/*.pt
+submission/**/*.pt
