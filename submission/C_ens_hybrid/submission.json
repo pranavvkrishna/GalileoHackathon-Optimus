@@ -1,0 +1,10 @@
+{
+  "plugin": "run_baseline.py",
+  "symbol": "WakeEnsembleHybrid",
+  "weights": "final_model.pt",
+  "train_command": "python train/pkg/baseline/run_baseline.py train --mirror --loss nmse --train-only --data_dir $DATA_DIR --seed 0 --output_dir outA --init_model \"${PACKAGE_DIR:-train/pkg}/baseline/init_model.pt\" && python train/pkg/baseline/run_baseline.py train --mirror --train-only --data_dir $DATA_DIR --seed 0 --output_dir outB --init_model \"${PACKAGE_DIR:-train/pkg}/baseline/init_model.pt\" && python -c \"import torch; a = torch.load('outA/final_model.pt', weights_only=True); b = torch.load('outB/final_model.pt', weights_only=True); a.update({'other.' + k: v for k, v in b.items()}); torch.save(a, 'final_model.pt')\"",
+  "train_dir": "train/",
+  "seed": 0,
+  "kind": "model",
+  "initial_weights": "initial_model.pt"
+}
