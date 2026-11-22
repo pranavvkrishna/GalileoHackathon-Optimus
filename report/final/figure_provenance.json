@@ -1,0 +1,55 @@
+{
+  "selected_case": "h1_008",
+  "case_index": 4,
+  "window_index": 16,
+  "window_start": 60,
+  "selection_rule": "Nearest median A_ref case error; first case in source order on ties within1e-12; first declared window",
+  "k": 6.160699844360352,
+  "theta0_deg": 25.26300048828125,
+  "Cplus_qualitative_inference": "CPU only, no fitting; compared with saved GPU lead errors",
+  "Cplus_max_abs_lead_nmse_difference": 2.2645507619101224e-07,
+  "n_cases": 12,
+  "n_windows": 48,
+  "uncertainty": "Case bootstrap2000resamples, seed0; not seed uncertainty or selection correction",
+  "data_source": "https://doi.org/10.5281/zenodo.24386760",
+  "input_snapshot": "Verified symmetry results; final submission selection remains pending",
+  "vorticity_color_limits": [
+    -26.043750000000045,
+    26.043750000000045
+  ],
+  "absolute_error_color_limits": [
+    0,
+    13.5457632637024
+  ],
+  "color_clipping": true,
+  "clipping_rule": "Field limits:99th percentile absolute truth over selected leads; error limits:99th percentile pooled late-lead absolute errors acrossB,C,C+. All methods share limits; original full-range plot retained.",
+  "fig3_final": {
+    "methods": [
+      "truth",
+      "C_ens"
+    ],
+    "leads": [
+      1,
+      20
+    ],
+    "vorticity_color_limits": [
+      -26.043750000000045,
+      26.043750000000045
+    ],
+    "clipping_rule": "99th percentile absolute truth over the two selected leads; shared by both rows; extremes saturate"
+  },
+  "fig1": {
+    "overall_gain": {
+      "portal": [
+        0.3937,
+        0.1593,
+        0.5953771907543816
+      ],
+      "validation": [
+        0.25713305657854196,
+        0.11814161075479422,
+        0.5405428911910143
+      ]
+    }
+  }
+}

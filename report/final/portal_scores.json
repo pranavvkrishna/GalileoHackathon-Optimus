@@ -1,0 +1,19 @@
+{
+ "source": "team-supplied portal record (hidden-tier score, lower is better); validation = official scorer, report_numbers.json",
+ "baseline": {"label": "organizer baseline", "portal": 0.3937, "validation": 0.25713305657854196},
+ "submissions": [
+  {"id": 8,   "name": "C_on_A",               "change": "averaging only",            "validation": 0.2561590619341918,  "portal": 0.41326, "confirmed": true},
+  {"id": 19,  "name": "C_from_B",             "change": "+ mirror training",         "validation": 0.18558599596016098, "portal": 0.36196, "confirmed": true},
+  {"id": 52,  "name": "C_from_Bplus_ood",     "change": "+ all windows, shrink",     "validation": 0.14398254618672326, "portal": 0.28762, "confirmed": true},
+  {"id": 95,  "name": "C_from_Bplus_hybrid",  "change": "+ period copy",             "validation": 0.14398254618672326, "portal": 0.17894, "confirmed": true},
+  {"id": 110, "name": "C_from_Bplus_hybrid2", "change": "+ soft copy blend",         "validation": 0.14398254618672326, "portal": 0.16798, "confirmed": true},
+  {"id": 120, "name": "C_nmse_hybrid",        "change": "+ variance-normalised loss", "validation": 0.12609385437830892, "portal": 0.15930, "confirmed": true},
+  {"id": 129, "name": "C_ens_hybrid",         "change": "+ 0.6/0.4 ensemble",        "validation": 0.11814161075479422, "portal": 0.1538,  "confirmed": false,
+   "note": "under organizer review; leaderboard value not confirmed"}
+ ],
+ "proxy_blend_frequency": {"source": "commit 741de6a message (no result file)",
+   "proxy": "CNN trained on k<=5.5 with the metric-weighted loss, 132 held-out cases k 6-7, history covering one period",
+   "CNN + shrink": 0.689, "hard gate r<0.3": 0.270, "soft blend (r 0.5-1.2)": 0.1905},
+ "deployed_k_ge_6.98_training_windows": {"source": "runs/p3/periodic/README.md",
+   "windows": 21, "copy_used": 16, "copy_nmse": 0.025, "hybrid": 0.119, "cnn": 0.158}
+}
