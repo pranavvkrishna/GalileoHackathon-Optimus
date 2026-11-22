@@ -1,0 +1,10 @@
+{
+  "plugin": "run_baseline.py",
+  "symbol": "WakeHybrid",
+  "weights": "final_model.pt",
+  "train_command": "python train/pkg/baseline/run_baseline.py init --seed 0 --output init_w96.pt && python train/pkg/baseline/run_baseline.py train --mirror --loss nmse --train-only --data_dir $DATA_DIR --seed 0 --output_dir out --init_model init_w96.pt && cp out/final_model.pt final_model.pt",
+  "train_dir": "train/",
+  "seed": 0,
+  "kind": "model",
+  "initial_weights": "initial_model.pt"
+}

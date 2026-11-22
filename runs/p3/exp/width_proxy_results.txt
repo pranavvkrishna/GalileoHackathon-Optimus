@@ -1,0 +1,5 @@
+T3a/width proxies (8 epochs):
+TH_mse_w64  theta0 31-35 0.3354 | validation 0.3926
+TH_nmse_w64 theta0 31-35 0.3353 | validation 0.4123
+TH_nmse_w96 theta0 31-35 0.3064 | validation 0.3667
+K_nmse_w96  in-range 0.0291 | k 6-7 1.0409 (w64 nmse: 0.0460 / 0.9160)
