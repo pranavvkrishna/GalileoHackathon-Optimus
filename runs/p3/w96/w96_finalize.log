@@ -1,0 +1,40 @@
+local_eval 0
+gates 0
+C_from_nmse_s0: forecast_nmse 0.1261 final 0.1837
+C_from_w96_s0: forecast_nmse 0.1463 final 0.1987
+C_from_w96_s0-C_from_nmse_s0 forecast_nmse: delta +0.0202 CI95 [+0.0172, +0.0238] improved 0/12
+C_from_w96_s0-C_from_nmse_s0 forecast_nmse_final: delta +0.0151 CI95 [+0.0070, +0.0241] improved 4/12
+fig2: None | wrote /home/team/person3/runs/w96
+ENSEMBLES: w96 0.1463 | nmse 0.1261 | 0.6nmse+0.4Bplus 0.1181
+  0.5*w96 + 0.5*nmse + 0*Bplus: 0.1215
+  0.6*w96 + 0.4*nmse + 0*Bplus: 0.1241
+  0.4*w96 + 0.4*nmse + 0.2*Bplus: 0.1183
+  0.5*w96 + 0.3*nmse + 0.2*Bplus: 0.1210
+  0.34*w96 + 0.33*nmse + 0.33*Bplus: 0.1185
+{
+ "symbol": "WakeHybrid",
+ "class": "WakeHybrid",
+ "device": "cuda",
+ "torch_threads": 1,
+ "metrics": {
+  "forecast_nmse": 0.14633953980720824,
+  "forecast_nmse_final": 0.1987089679334124,
+  "mean_field_rel_l2": 0.7940602654552298,
+  "psd_log_rmse": 0.9734363862141401,
+  "st_abs_error": 0.07010841121276219,
+  "regime_balanced_accuracy": 0.6111111111111112
+ },
+ "latency_ms_median": 9.33,
+ "checks": {
+  "shape [48,96822]": true,
+  "finite": true,
+  "forecast_nmse<=1": true,
+  "latency_median<100ms": true,
+  "forecast_nmse\u22480.14633953980720824": true
+ }
+}
+check_submission 0
+21 files zip ok
+600fb8cca9aacf71951d78823727affa7b571ddc1078e9f045cc49a9b2dbb98a  C_w96_hybrid.zip
+validation C_from_w96 0.14633953980720824
+W96_DONE
