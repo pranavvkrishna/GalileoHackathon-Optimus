@@ -37,7 +37,8 @@ On the hidden tiers, the averaged model's main failure is frequency
 extrapolation. A parameter-free forecast that copies the history forward
 by whole forcing periods, gated by how well the history repeats,
 lowered the portal score from 0.2876 to 0.1789, and a proxy-tuned soft
-blend lowered it to 0.1680.
+blend lowered it to 0.1680. Training with a per-window, variance-normalised
+loss (validation 0.1440 to 0.1261) lowered it to 0.1593.
 The results support these inference changes on the evaluated cases;
 they do not establish the benefit of training augmentation or
 superiority over generic averaging.
@@ -198,10 +199,11 @@ C\_from\_B & C & reflection averaging & 0.3620\\
 C\_from\_Bplus\_ood & C+ & + out-of-range shrinkage & 0.2876\\
 \#95 C\_from\_Bplus\_hybrid & C+ & + period copy, hard gate & 0.1789\\
 C\_from\_Bplus\_hybrid2 & C+ & + soft blend for $k>7$ & 0.1680\\
+C\_nmse\_hybrid & C$_{\rm nmse}$ & same, metric-weighted training loss & 0.1593\\
 \bottomrule
 \end{tabular}
-\caption{Hidden-tier portal scores (lower is better). The four submissions
-share weights except C$\to$C+, and each row changes one inference step.
+\caption{Hidden-tier portal scores (lower is better). Each row changes one
+step: the network (C$\to$C+$\to$C$_{\rm nmse}$) or the inference procedure.
 The portal's aggregation over tiers is not published.}
 \label{tab:portal}
 \end{table}
