@@ -184,7 +184,8 @@ class WakeMirrorAvgOOD(WakeMirrorAvg):
 
 
 FRAME_DT = 0.1             # convective time between stored frames (train.npz t_frames step)
-PERIODIC_MAX_RESIDUAL = 0.3
+PERIODIC_MAX_RESIDUAL = 0.3          # in-range k: hard gate (CNN is good there)
+OOD_BLEND_FULL, OOD_BLEND_NONE = 0.5, 1.2  # k above the training range: copy weight 1 below 0.5, 0 above 1.2
 
 
 class WakeHybrid(WakeMirrorAvgOOD):
@@ -219,14 +220,20 @@ class WakeHybrid(WakeMirrorAvgOOD):
             if not errs:
                 continue
             resid = float(torch.stack(errs).mean() / torch.clamp(torch.mean((hist - hist.mean(0)) ** 2), min=1e-12))
-            if resid >= PERIODIC_MAX_RESIDUAL:
+            if kb > K_RANGE[1]:
+                # proxy (CNN trained k<=5.5, scored k 6-7): CNN+pull 0.689, hard gate 0.3 0.270, this blend 0.1905
+                wcopy = min(max((OOD_BLEND_NONE - resid) / (OOD_BLEND_NONE - OOD_BLEND_FULL), 0.0), 1.0)
+            else:
+                wcopy = 1.0 if resid < PERIODIC_MAX_RESIDUAL else 0.0
+            if wcopy <= 0.0:
                 continue
             frames = []
             for j in range(HORIZON):
                 tau = span + (j + 1) * FRAME_DT                 # future time on the history clock
                 m = math.ceil((tau - span) / T - 1e-9)
                 frames.append(self._sample(hist, tau - m * T))
-            out[b, : HORIZON * FIELD] = torch.stack(frames).flatten().to(out.dtype)
+            copy = torch.stack(frames).flatten().to(out.dtype)
+            out[b, : HORIZON * FIELD] = wcopy * copy + (1.0 - wcopy) * out[b, : HORIZON * FIELD]
         return out
 
 def compose_task():
