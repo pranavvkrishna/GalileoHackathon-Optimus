@@ -1,0 +1,10 @@
+{
+  "plugin": "run_baseline.py",
+  "symbol": "WakeMixHybrid",
+  "weights": "final_model.pt",
+  "train_command": "python train/pkg/baseline/run_baseline.py init --seed 0 --width 96 --output init_w96.pt && python train/pkg/baseline/run_baseline.py train --mirror --loss nmse --width 96 --epochs 30 --subsample 3 --train-only --data_dir $DATA_DIR --seed 0 --output_dir outW --init_model init_w96.pt && python train/pkg/baseline/run_baseline.py train --mirror --loss nmse --width 64 --epochs 40 --subsample 1 --train-only --data_dir $DATA_DIR --seed 0 --output_dir outA --init_model \"${PACKAGE_DIR:-train/pkg}/baseline/init_model.pt\" && python train/pkg/baseline/run_baseline.py train --mirror --width 64 --epochs 40 --subsample 1 --train-only --data_dir $DATA_DIR --seed 0 --output_dir outB --init_model \"${PACKAGE_DIR:-train/pkg}/baseline/init_model.pt\" && python -c \"import torch; w = torch.load('outW/final_model.pt', weights_only=True); a = torch.load('outA/final_model.pt', weights_only=True); b = torch.load('outB/final_model.pt', weights_only=True); w.update({'m64a.' + k: v for k, v in a.items()}); w.update({'m64b.' + k: v for k, v in b.items()}); torch.save(w, 'final_model.pt')\"",
+  "train_dir": "train/",
+  "seed": 0,
+  "kind": "model",
+  "initial_weights": "initial_model.pt"
+}

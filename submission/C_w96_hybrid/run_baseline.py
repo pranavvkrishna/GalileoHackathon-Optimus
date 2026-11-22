@@ -148,7 +148,7 @@ class WakeMirrorAvg(WakeBaseline):
 
 
 # Training-set kinematics range (train.npz, 810 cases): k in [2.0016, 6.9976], theta0 in [5.009, 34.995] deg.
-K_RANGE = (2.0016000270843506, 6.997600078582764)
+K_TRAIN_RANGE = (2.0016000270843506, 6.997600078582764)
 THETA0_DEG_RANGE = (5.008999824523926, 34.994998931884766)
 # Out-of-range shrinkage strength reached at the last lead (linear ramp from 0 at lead 1). Chosen on a proxy
 # extrapolation test (train k <= 5.49, score held-out training cases k 6.0-7.0): NMSE 0.99 -> 0.78 at 0.7.
@@ -168,7 +168,7 @@ class WakeMirrorAvgOOD(WakeMirrorAvg):
         th = torch.rad2deg(x[:, HISTORY + 1, 0, 0])
         a = torch.zeros_like(k)
         # strength grows with distance outside the k range (proxy: clip(0.6 + 0.6*(dk-0.5), 0.6, 1.0) -> 0.743 vs 0.781 flat 0.7)
-        dk = torch.clamp(torch.maximum(k - K_RANGE[1], K_RANGE[0] - k), min=0.0)
+        dk = torch.clamp(torch.maximum(k - K_TRAIN_RANGE[1], K_TRAIN_RANGE[0] - k), min=0.0)
         a = torch.where(dk > 0, torch.clamp(0.6 + 0.6 * (dk - 0.5), 0.6, 1.0), a)
         th_out = (th > THETA0_DEG_RANGE[1]) | (th < THETA0_DEG_RANGE[0])
         a = torch.where(th_out, torch.maximum(a, torch.full_like(a, OOD_SHRINK_THETA0)), a)
@@ -220,7 +220,7 @@ class WakeHybrid(WakeMirrorAvgOOD):
             if not errs:
                 continue
             resid = float(torch.stack(errs).mean() / torch.clamp(torch.mean((hist - hist.mean(0)) ** 2), min=1e-12))
-            if kb > K_RANGE[1]:
+            if kb > K_TRAIN_RANGE[1]:
                 # proxy (CNN trained k<=5.5, scored k 6-7): CNN+pull 0.689, hard gate 0.3 0.270, this blend 0.1905
                 wcopy = min(max((OOD_BLEND_NONE - resid) / (OOD_BLEND_NONE - OOD_BLEND_FULL), 0.0), 1.0)
             else:
