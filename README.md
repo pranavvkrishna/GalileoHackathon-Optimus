@@ -8,7 +8,7 @@ Galileo Hackathon 2026, Track 2 · Task: **pitching-wing-wake** (forecast the vo
 Forecasting the wake has two separate limits: learning in-range dynamics, and extrapolating beyond the training range. The public validation set measures only the first.
 - **In-range:** reflection augmentation + mirror averaging, all training windows, a variance-normalised loss and a 2-network ensemble cut validation NMSE **0.2571 → 0.1181 (−54%)**.
 - **Extrapolation:** a parameter-free *period copy* (the wake locks onto the known forcing period) left validation unchanged but gave our largest hidden-score drop, **0.2876 → 0.1789**.
-- **Overall:** best confirmed portal score **0.1593** vs organizer baseline **0.3937 (−60%)**.
+- **Overall:** final portal score **0.1538** (#129, leaderboard; 3rd place) vs organizer baseline **0.3937 (−61%)**.
 
 ## Results
 | # | Model | Change | Val. NMSE | Portal |
@@ -19,7 +19,7 @@ Forecasting the wake has two separate limits: learning in-range dynamics, and ex
 | 95 | C_from_Bplus_hybrid | + period copy | 0.1440 | 0.1789 |
 | 110 | C_from_Bplus_hybrid2 | + soft copy blend | 0.1440 | 0.1680 |
 | 120 | C_nmse_hybrid | + variance-normalised loss | 0.1261 | 0.1593 |
-| 129 | C_ens_hybrid (final) | + 0.6/0.4 ensemble | 0.1181 | under review |
+| 129 | C_ens_hybrid (final) | + 0.6/0.4 ensemble | 0.1181 | 0.1538 |
 
 ## Repository
 - `report/final/` — report source, figures, `NUMBER_SOURCES.md` (every quoted number → source file)
