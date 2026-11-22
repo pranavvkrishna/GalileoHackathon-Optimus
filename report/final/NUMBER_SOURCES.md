@@ -30,13 +30,13 @@ Scoring rule everywhere: per-lead NMSE clipped at 4, then averaged (official ord
 | C_ens − A_ref | −0.1390 [−0.1982, −0.0985], 12/12 | package run + plot_data |
 | C_ens checks, latency | health pass; 88.2 ms (1 laptop CPU thread) | prepare_update.py run |
 | K_RANGE effect | st_abs_error 0.070109 → 0.070132 (2.3e-5), forecasts identical | C_ens package run vs shared/local_eval.py |
-| Overall gains | portal −60% (0.3937→0.1593; −59.5%), validation −54% (0.2571→0.1181; −54.1%) | portal_scores.json + report_numbers.json (computed in build_figures.py, stored in figure_provenance.json) |
+| Overall gains | portal −61% (0.3937→0.1538; −60.9%), validation −54% (0.2571→0.1181; −54.1%) | portal_scores.json + report_numbers.json (computed in build_figures.py, stored in figure_provenance.json) |
 
 ## Team-supplied or recorded (not recomputable here)
 
 | Quantity | Value | Source |
 |---|---|---|
-| Portal scores #8 0.41326, #19 0.36196, #52 0.28762, #95 0.17894, #110 0.16798, #120 0.15930; #129 under review (leaderboard 0.1538 unconfirmed); baseline 0.3937 | | team portal record → portal_scores.json |
+| Portal scores #8 0.41326, #19 0.36196, #52 0.28762, #95 0.17894, #110 0.16798, #120 0.15930, #129 0.1538 (final leaderboard); baseline 0.3937 | | team portal record → portal_scores.json |
 | "C's portal score 0.3620", "0.2876 → 0.1789", "largest single portal drop" | −0.1087 vs next −0.0743 (#19→#52) | portal_scores.json |
 | "three of seven submissions share 0.1440, portal 0.2876–0.1680" | #52, #95, #110 | portal_scores.json + report_numbers.json |
 | Hidden tiers: T2 kθ0 2.3–3.3 rad; T3a θ0 38–45°; T3f k 7.5–9; validation block | | original/package/pitching_airfoil_wake/TASK_CARD.md (Hidden test section) |

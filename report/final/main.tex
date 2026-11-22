@@ -40,8 +40,8 @@ loss, a two-network ensemble) lowered validation NMSE from 0.2571 to 0.1181
 ($-54\%$). A parameter-free copy of the history by whole forcing periods left
 validation unchanged (0.1440) yet gave our largest single portal drop, from 0.2876
 to 0.1789. Overall the
-best confirmed portal score fell from the organizer baseline's 0.3937 to 0.1593
-($-60\%$); the final ensemble is under review. Validation and the hidden
+final portal score fell from the organizer baseline's 0.3937 to 0.1538 (\#129,
+$-61\%$). Validation and the hidden
 extrapolation tiers measure different things: training cut validation error by
 54\%, yet our largest hidden-score drop came from a physics-based period copy that
 validation could not see.
@@ -74,8 +74,7 @@ improvements can validation detect?
 \caption{(a) Training and validation conditions and the hidden tiers. Only one
 coordinate of T3a ($\theta_0$) and T3f ($k$) is published; shading spans the
 training range of the other. (b) Each submission's validation NMSE against its
-portal score, in submission order. \#129 (hollow) is under organizer review (its
-unconfirmed leaderboard value 0.1538 is plotted).}
+portal score, in submission order; \#129 is the final submission (0.1538).}
 \label{fig:setting}
 \end{figure}
 
@@ -105,7 +104,7 @@ C\_from\_Bplus\_ood & + all windows (B+), out-of-range shrink & 0.1440 & 0.28762
 C\_from\_Bplus\_hybrid & + period copy, hard gate & 0.1440 & 0.17894 (\#95)\\
 C\_from\_Bplus\_hybrid2 & + soft copy blend for $k>7$ & 0.1440 & 0.16798 (\#110)\\
 C\_nmse\_hybrid & + variance-normalised loss (\Bn) & 0.1261 & 0.15930 (\#120)\\
-C\_ens\_hybrid & + 0.6\,\Cn{} / 0.4\,C+ ensemble & 0.1181 & under review (\#129)\\
+C\_ens\_hybrid & + 0.6\,\Cn{} / 0.4\,C+ ensemble & 0.1181 & 0.1538 (\#129)\\
 \midrule
 Width 96 (rejected) & 1/3 windows, 30 ep.; all, 10 ep. & 0.1463; 0.1382 & not submitted\\
 3-network mix (rejected) & 0.4 width-96 (all) + 0.4 \Cn{} + 0.2 C+ & 0.1161 & not submitted\\
@@ -120,8 +119,8 @@ share 0.1440. Portal: hidden tiers, lower is better; baseline 0.3937.}
 \label{sec:final}
 
 Against the organizer baseline, the final model lowers validation NMSE from
-0.2571 to 0.1181 ($-54\%$), and our best confirmed portal score is 0.1593 against
-0.3937 ($-60\%$).
+0.2571 to 0.1181 ($-54\%$), and our final portal score is 0.1538 against 0.3937
+($-61\%$).
 
 \begin{center}
 \begin{tikzpicture}[font=\scriptsize, >={Stealth[length=4pt]},

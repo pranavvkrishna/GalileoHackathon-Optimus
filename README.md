@@ -23,7 +23,7 @@ Forecasting the wake has two separate limits: learning in-range dynamics, and ex
 
 ## Repository
 - `report/final/` — report source, figures, `NUMBER_SOURCES.md` (every quoted number → source file)
-- `variants/` — modified baseline (`run_baseline.py`: `--mirror`, `--loss nmse`, mirror-averaging / hybrid classes)
+- `variants/` — modified baseline (`--mirror`, mirror averaging); final models incl. `--loss nmse` and hybrid classes are in `submission/*/run_baseline.py`
 - `submission/` — packaged submissions (`submission.json` + plugin code; weights not tracked)
 - `shared/` — evaluation, paired bootstrap, packaging and test scripts
 - `runs/` — metrics and training logs
