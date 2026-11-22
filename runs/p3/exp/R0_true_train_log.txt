@@ -1,0 +1,10 @@
+epoch   0 loss 0.23222 121s
+epoch   1 loss 0.06502 475s
+epoch   2 loss 0.04650 558s
+epoch   3 loss 0.03709 738s
+epoch   4 loss 0.03135 817s
+epoch   5 loss 0.02722 897s
+epoch   6 loss 0.02522 977s
+epoch   7 loss 0.02441 1070s
+{"device": "cuda", "evaluate_seconds": 0.0, "gpu": "NVIDIA H100 80GB HBM3", "metrics": {}, "peak_vram_gib": 3.12, "train_cases": 555, "train_seconds": 1069.8, "train_windows": 15540}
+TRAIN_EXIT=0
