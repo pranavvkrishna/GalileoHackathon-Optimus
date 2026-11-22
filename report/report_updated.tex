@@ -1,0 +1,387 @@
+\documentclass{article}
+\PassOptionsToPackage{numbers}{natbib}
+\usepackage[final,sglblindworkshop]{neurips_2026}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{
+  hyperref,url,booktabs,tabularx,amsfonts,amsmath,
+  microtype,xcolor,graphicx
+}
+\hypersetup{hidelinks}
+\workshoptitle{Galileo Hackathon 2026}
+
+\makeatletter
+\renewcommand{\@noticestring}{
+  Galileo Hackathon 2026. Participant research report.
+}
+\makeatother
+
+\newcommand{\pending}[1]{%
+  \textcolor{blue!60!black}{\textbf{Unresolved:} #1}
+}
+
+\title{Reflection averaging and period copying for wake forecasts}
+\author{
+  Team Optimus (Raghav Vijaykannan, Pranav Vijay Krishna, Hrithik Yash)\\
+  Team ID: G2-12 \quad Task: pitching-wing-wake
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+With model weights fixed, reflection averaging lowers validation NMSE
+from 0.2094 to 0.1856, improving forecasts in all 12 cases; three times
+the training exposure lowers it further to 0.1440.
+On the hidden tiers, the averaged model's main failure is frequency
+extrapolation. A parameter-free forecast that copies the history forward
+by whole forcing periods, gated by how well the history repeats,
+lowered the portal score from 0.2876 to 0.1789, and a proxy-tuned soft
+blend lowered it to 0.1680.
+The results support these inference changes on the evaluated cases;
+they do not establish the benefit of training augmentation or
+superiority over generic averaging.
+\end{abstract}
+
+\section{Scientific goal \& initial hypothesis}
+
+We forecast 20 vorticity frames from 10 past frames and the pitching
+conditions. We test whether teaching or enforcing reflection symmetry
+improves these forecasts. Reflection consistency means that reflecting
+the input should reflect the predicted wake; an individual wake need
+not be symmetric.
+
+We hypothesized that augmentation would reduce reflection inconsistency
+and that averaging would remove it and could improve accuracy.
+Lower inconsistency without lower forecast error would contradict
+the accuracy hypothesis.
+
+For $y\mapsto-y$, $G$ negates the history's vorticity, reverses its
+vertical rows, and negates both pitch-phase sine and cosine.
+Frequency $k$ and positive amplitude $\theta_0$ remain unchanged.
+$S$ negates and vertically reverses the forecast.
+For B's predictor $F_B$, C is
+\begin{equation}
+F_C(x)=\tfrac12\left[F_B(x)+S F_B(Gx)\right].
+\end{equation}
+This enforces reflection consistency of the forecast map using two
+forecast passes.
+
+The task permits this transformation. The domain is symmetric about
+$y=0$; exact grid placement and boundary implementation remain
+unaudited.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig1_setting.pdf}
+\caption{
+Left: released training and validation conditions.
+Right: averaging moves B and B+ to zero measured reflection defect
+and lower forecast error. Arrows connect the same weights.
+Defect measures disagreement between reflecting a prediction and
+predicting a reflected input; it does not measure accuracy.
+}
+\label{fig:setting}
+\end{figure}
+
+\newpage
+\section{Research trajectory}
+
+Averaging the organizer checkpoint (A$_{\rm ref}$) changed NMSE only
+from 0.2571 to 0.2562, with an interval crossing zero.
+We next trained B with reflection augmentation; averaging its
+predictions (C) improved all 12 cases.
+The matched local run without augmentation, A, did not finish.
+We then increased training exposure for B+ and applied averaging
+to obtain C+. To check whether gains might reflect averaging more
+generally, E averaged A$_{\rm ref}$ and B forecasts.
+Fresh train-only reproduction verified B/C.
+
+The portal score of C (0.3620) was far above its validation NMSE.
+The hidden set adds amplitude ($\theta_0$ 38--45$^\circ$, T3a) and
+frequency ($k$ 7.5--9, T3f) extrapolation tiers beyond the training
+range ($k\le7$, $\theta_0\le35^\circ$). We therefore built proxies from
+training data: a model trained on $k\le5.5$ and scored on held-out
+cases with $k$ 6--7, and one trained on $\theta_0\le30^\circ$ and scored
+on 31--35$^\circ$. Each test motivated the next submission
+(Table~\ref{tab:portal}).
+
+\section{Final model \& comparisons}
+
+B uses the official width-64 U-Net (1,890,708 parameters), seed 0,
+and 40 epochs. Each training example is reflected with probability
+$0.5$ using a separate random generator.
+B uses 22,680 windows from 810 training cases; B+ uses 68,040,
+giving three times the training steps.
+Validation is excluded from fitting.
+The packaged command records the full optimizer recipe.
+C/C+ average forecasts and retain statistical outputs.
+E equally averages A$_{\rm ref}$ and B.
+
+All validation scores use the same 48 windows from 12 public-validation
+cases. Lower NMSE is better. The official rule clips each lead's NMSE at
+4 before averaging. Intervals resample paired case means 2,000 times
+(seed 0). They describe case-sampling variability, not training-seed
+uncertainty or selection-adjusted performance.
+
+\begin{center}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Model & NMSE & Final lead & Defect & Fit time (s) & Passes\\
+\midrule
+A$_{\rm ref}$ & 0.2571 & 0.4105 & 0.1638 & Unknown & 1\\
+A$_{\rm avg}$ & 0.2562 & 0.3696 & 0 & Reuses A$_{\rm ref}$ & 2\\
+B & 0.2094 & 0.3144 & 0.0505 & 1,068 & 1\\
+C & 0.1856 & 0.2754 & 0 & Reuses B & 2\\
+B+ & 0.1670 & 0.2373 & 0.0493 & 3,881.6 & 1\\
+C+ & 0.1440 & 0.2121 & 0 & Reuses B+ & 2\\
+E & 0.1897 & 0.2855 & Unmeasured & A$_{\rm ref}$ + B & 2\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent\textbf{More training.}
+C+ lowers validation NMSE by 0.04160 versus C, with interval
+$[-0.04747,-0.03616]$ and all 12 cases improving. It uses three times
+the training exposure, so this is an accuracy gain at extra training
+cost, not an equal-budget symmetry result.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2_accuracy.pdf}
+\caption{
+C improves B across the forecast horizon and in all 12 cases.
+Its advantage over E is unresolved: the interval crosses zero.
+Dots show cases, diamonds show mean differences, and bars show
+95\% case-bootstrap intervals. Faint curves show individual C cases.
+Negative differences favor the first model.
+}
+\label{fig:accuracy}
+\end{figure}
+
+\noindent\textbf{Extrapolation and period copying.}
+On the frequency proxy, the averaged model scored 0.99. Clamping the
+$k$ input to the training range made it worse (1.04). Shrinking the
+forecast toward the mean of the 10 history frames, ramped over the
+leads and applied only for out-of-range $k$, gave 0.78; the same
+shrinkage hurt on the amplitude proxy and on validation, so it is
+gated on $k$.
+Hiding $k$ during training did not help extrapolation (1.04--1.05).
+This suggests the model has not learned the faster dynamics; the cause
+is not the $k$ input channel.
+The forcing period $T=2\pi/k$ is known. For $k\ge6.98$, one period fits
+inside the 0.9\,$c/U$ history, so the forecast can copy the history
+forward by whole periods (linear interpolation in time). A gate measures
+how well the history repeats with period $T$ (residual $r$, normalised
+by the history's variance). The copy has no trained parameters, so we
+scored it on 2,100 training windows from 523 cases with $k$ 3.5--7,
+lengthening the history to cover one period. Windows with $r<0.3$ had
+mean NMSE 0.059. Periodic windows had error 0.044--0.058 in every $k$
+bin, so accuracy does not depend on $k$.
+On the frequency proxy, with a CNN that never saw $k>5.5$, the copy beat
+the CNN even for aperiodic wakes (0.61 versus 0.99).
+For out-of-range $k$, a soft blend (full copy below $r=0.5$, none above
+1.2) scored 0.1905 against 0.270 for a hard gate at $r<0.3$.
+In range, the hard gate is kept, and validation outputs are unchanged.
+Copying commutes with $S$, so reflection consistency is preserved.
+A half-period copy with reflection did not help on the amplitude proxy
+or on validation. Analog forecasting, using the continuation of the
+closest training history, scored 1.02 on validation.
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{@{}lllr@{}}
+\toprule
+Submission & Model & Inference change & Portal score\\
+\midrule
+C\_from\_B & C & reflection averaging & 0.3620\\
+C\_from\_Bplus\_ood & C+ & + out-of-range shrinkage & 0.2876\\
+\#95 C\_from\_Bplus\_hybrid & C+ & + period copy, hard gate & 0.1789\\
+C\_from\_Bplus\_hybrid2 & C+ & + soft blend for $k>7$ & 0.1680\\
+\bottomrule
+\end{tabular}
+\caption{Hidden-tier portal scores (lower is better). The four submissions
+share weights except C$\to$C+, and each row changes one inference step.
+The portal's aggregation over tiers is not published.}
+\label{tab:portal}
+\end{table}
+
+\noindent\textbf{Cost and checks.}
+B+ took 3.6 times B's recorded fit time for three times the steps;
+timing was not controlled. C needs two forecast passes without
+additional training; the period copy adds no fitted parameters.
+Reproduced C passed shape, finite-output, NMSE, non-frozen-forecast
+and latency checks. Its H100 median batch-1 latency was 1.959 ms
+over 50 measurements, with other jobs paused and their GPU contexts
+resident. Every submitted package passed the same checks on validation.
+The worst-case CPU latency with the copy path was 19 ms.
+C+ and its derivatives lack a fresh full training reproduction.
+
+\medskip
+\noindent\textbf{Artifact status.}
+\pending{
+Confirm the final selected submission, its portal ID, ZIP hash and code
+revision. A metric-weighted-loss variant (C\_nmse\_hybrid) is pending.
+}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fig3_fields_robust.pdf}
+\caption{
+Early and late forecasts, followed by late absolute error.
+Compare vortex locations across B, C and C+.
+This example does not replace the case-level results.
+Case \texttt{h1\_008}, start 60, was selected nearest the median
+reference error, not by improvement.
+Shared limits are $\pm26.044$ for vorticity and $[0,13.546]$
+for error (99th-percentile limits; extremes saturate).
+}
+\label{fig:fields}
+\end{figure}
+
+\section{Key insights}
+
+\noindent\textbf{Averaging helps this trained model.}
+With B's weights fixed, C lowers mean NMSE by 0.02381 (11.4\%).
+The 95\% case interval is $[-0.02734,-0.02038]$, with all 12 cases
+improving (Fig.~\ref{fig:accuracy}).
+This comparison isolates the inference operation on these cases.
+
+\medskip
+\noindent\textbf{Consistency does not guarantee accuracy.}
+A$_{\rm avg}$ also has zero defect, but its paired change is
+$-0.00097$, with interval $[-0.07174,0.05850]$.
+C versus E is likewise inconclusive:
+$-0.00409$, with interval $[-0.02451,0.01144]$;
+5 of 12 cases favor C.
+These results establish neither equivalence nor a symmetry-specific
+advantage over generic averaging.
+
+\medskip
+\noindent\textbf{Known periodicity beats learned extrapolation.}
+For frequencies above the training range, copying the history by the
+known forcing period outperformed the network on held-out proxy cases.
+This held for periodic wakes (0.055 versus 0.585) and for aperiodic
+ones (0.61 versus 0.99). Adding the copy lowered the portal score from
+0.2876 to 0.1789, and the soft blend lowered it to 0.1680.
+The comparison uses proxies built from training data, so the size of
+the gain on the hidden tier is inferred from the portal, not measured
+directly.
+
+\newpage
+\section{Limitations \& next experiment}
+
+Without a completed matched local A, B versus the organizer checkpoint
+cannot isolate augmentation.
+One seed and repeated use of 12 validation cases limit accuracy claims.
+The exact discrete physical reflection remains unaudited.
+Portal scores are aggregate hidden-tier results with an unpublished
+aggregation. Our extrapolation evidence comes from proxies built on
+training data, with shorter training (8--12 epochs) and a smaller
+extrapolation distance than the hidden tiers. Thresholds were chosen
+on these proxies. The copy applies only when one period fits in the
+history ($k\ge6.98$). Amplitude extrapolation remains unaddressed:
+clamping $\theta_0$, shrinkage and half-period copying did not help on
+the amplitude proxy, and ensembling four models did not help on the
+frequency proxy.
+
+Next, complete A with B's initialization, window order, optimizer,
+schedule and exposure, changing only augmentation.
+Evaluate A, averaged A, B and C on fixed cases, then repeat across seeds.
+A matched independently trained predictor is needed to compare
+reflection averaging with generic averaging; E is not that control.
+For amplitude extrapolation, test training-side changes on the
+$\theta_0$ proxy before full runs.
+
+\medskip
+\noindent\textbf{Prior work.}
+Wang et al.~\citep{wang2021} compare equivariant fluid models with
+ordinary and augmented models; forcing and boundaries must respect
+the transformation.
+Elesedy and Zaidi~\citep{elesedy2021} give squared-risk benefits under
+an invariant input distribution and equivariant target, not a
+guarantee for our finite, clipped score.
+Fromme et al.~\citep{fromme2025} study steerable convection forecasting,
+rather than this inference operation.
+Our contribution is the measured same-weights wake comparison and the
+proxy-validated period copy, not a new method.
+
+\section{Reproducibility, contributions \& AI use}
+
+\noindent\textbf{Evidence.}
+Fresh seed-0, 40-epoch train-only reproduction matched B's final
+tensors and all C output arrays exactly.
+Environment: Python 3.12.16, PyTorch 2.10/CUDA 12.8, H100 80 GB.
+The packaged command initializes seed 0, then runs
+\texttt{train --mirror --train-only} with only \texttt{train.npz}
+visible. Validation is exposed after fitting.
+Proxy experiments, period-copy tests and packages are under
+\texttt{runs/p3/} and \texttt{submission/} in the repository.
+
+Data:
+\href{https://doi.org/10.5281/zenodo.24386760}
+{doi:10.5281/zenodo.24386760}.
+The
+\href{https://github.com/pranavvkrishna/GalileoHackathon-Optimus}
+{repository}
+and
+\href{https://github.com/pranavvkrishna/GalileoHackathon-Optimus/issues/2}
+{coordination issue}
+identify source and evidence locations.
+\pending{Update the reviewed repository snapshot (was \texttt{63d09df}) to the final submission revision.}
+
+\medskip
+\noindent Verified artifact:
+\texttt{C\_from\_B\_fresh\_verified\_v2.zip}.
+
+\noindent ZIP SHA-256 (concatenate lines):\\
+\texttt{0382f3bd83c37a5400b0cc21188df41e30ff}\\
+\texttt{6e885b1432aaca43bea52f32bd38}
+
+\noindent C\_from\_Bplus\_hybrid2 ZIP SHA-256:\\
+\texttt{9ff281434be68937298866e124c97959}\\
+\texttt{5ce1eaccd7ce0d00c21b5a92718877fc}
+
+\medskip
+Included plot data and provenance rebuild figures without a GPU.
+The C+ example was inferred on CPU; lead errors match the GPU
+diagnostic within $2.3\times10^{-7}$.
+Full-range plots document color saturation.
+
+\medskip
+\noindent\textbf{Human judgment and AI use.}
+The team reviewed the results and exercised human judgment in
+assessing the scientific claims, limitations and conclusions.
+AI assistance supported literature review, code, figures, LaTeX
+and drafting. Codex assisted with report preparation;
+Undermind supported paper retrieval and reading.
+Claude Code assisted with evaluation code, gates, proxy experiments,
+the period-copy analysis and submission packaging.
+The team reviewed the interpretation and final wording.
+
+\clearpage
+\begin{thebibliography}{9}
+
+\bibitem{wang2021}
+Rui Wang, Robin Walters, and Rose Yu.
+Incorporating Symmetry into Deep Dynamics Models for Improved
+Generalization.
+\emph{ICLR}, 2021.
+\url{https://doi.org/10.48550/arXiv.2002.03061}.
+
+\bibitem{elesedy2021}
+Bryn Elesedy and Sheheryar Zaidi.
+Provably Strict Generalisation Benefit for Equivariant Models.
+\emph{Proceedings of ICML}, PMLR 139, 2021.
+\url{https://doi.org/10.48550/arXiv.2102.10333}.
+
+\bibitem{fromme2025}
+Fynn Fromme, Christine Allen-Blanchette, Hans Harder,
+and Sebastian Peitz.
+Surrogate Modeling of 3D Rayleigh--B\'enard Convection with
+Equivariant Autoencoders.
+ArXiv preprint, 2025.
+\url{https://doi.org/10.48550/arXiv.2505.13569}.
+
+\end{thebibliography}
+\end{document}
